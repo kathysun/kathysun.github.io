@@ -1,0 +1,39 @@
+h1 {
+  font-size: 2.5em;
+  margin: 2.5em auto 1em;
+  text-align: center;
+  font-weight: bold;
+  color: #333333;
+}
+
+h2 {
+  font-size: 1.25em;
+  margin: 1em auto;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.menu a {
+  color: #0e0e0e;
+}
+
+.menu a:hover {
+  color: #324c66;
+}
+
+.top-text {
+  margin: 3em auto 1em;
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.subtitle {
+  font-size: 1.25em;
+  text-align: center;
+}
+
+.card img {
+  object-fit: cover;
+  height: 225px;
+}

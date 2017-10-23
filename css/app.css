@@ -1,17 +1,24 @@
 h1 {
-  font-size: 2.5em;
-  margin: 2.5em auto 1em;
-  text-align: center;
+  font-size: 2.25em;
   font-weight: bold;
   color: #333333;
+  margin-bottom: 0.75em;
 }
 
 h2 {
   font-size: 1.25em;
-  margin: 1em auto;
-  text-align: center;
-  text-transform: uppercase;
+  margin: 2em auto 1em;
+  /*text-align: center;*/
   font-weight: bold;
+}
+
+.subtitle {
+  font-size: 1.5em;
+  color: #545454;
+}
+
+.subtitle svg {
+  fill: #b2b9c9;
 }
 
 .menu a {
@@ -28,12 +35,15 @@ h2 {
   font-weight: bold;
 }
 
-.subtitle {
-  font-size: 1.25em;
-  text-align: center;
-}
-
 .card img {
   object-fit: cover;
   height: 225px;
+}
+
+.footer a svg {
+  margin-right: 10px;
+}
+
+.footer a svg:hover {
+  fill: #324c66;
 }

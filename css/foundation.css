@@ -21,7 +21,7 @@
      *    IE on Windows Phone and in iOS.
      */
 html {
-  font-family: sans-serif;
+  font-family: 'Lato', sans-serif;
   /* 1 */
   line-height: 1.15;
   /* 2 */
@@ -444,7 +444,7 @@ body {
   margin: 0;
   padding: 0;
   background: #fefefe;
-  font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-family: 'Lato', sans-serif;
   font-weight: normal;
   line-height: 1.5;
   color: #0a0a0a;
@@ -553,7 +553,7 @@ h3, .h3,
 h4, .h4,
 h5, .h5,
 h6, .h6 {
-  font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-family: 'Lora', serif;
   font-style: normal;
   font-weight: normal;
   color: inherit;
@@ -2241,7 +2241,7 @@ a.thumbnail {
 
 .grid-padding-x > .cell {
   padding-right: 0.9375rem;
-  padding-left: 0.9375rem; }
+  padding-left: 2rem; }
 
 .small-up-1 > .cell {
   width: 100%; }

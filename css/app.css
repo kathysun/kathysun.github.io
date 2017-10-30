@@ -47,3 +47,7 @@ h2 {
 .footer a svg:hover {
   fill: #324c66;
 }
+
+.case-study {
+  background-image: url('../images/case_study.jpg');
+}

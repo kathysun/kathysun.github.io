@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 30);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -649,7 +649,7 @@ function getKeyCodes(kcs) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Triggers; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_motion__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_motion__ = __webpack_require__(6);
 
 
 
@@ -925,69 +925,111 @@ Triggers.init = function ($, Foundation) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Nest; });
+/* unused harmony export Move */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Motion; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_core__ = __webpack_require__(1);
 
 
 
 
-var Nest = {
-  Feather: function (menu) {
-    var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'zf';
 
-    menu.attr('role', 'menubar');
+/**
+ * Motion module.
+ * @module foundation.motion
+ */
 
-    var items = menu.find('li').attr({ 'role': 'menuitem' }),
-        subMenuClass = 'is-' + type + '-submenu',
-        subItemClass = subMenuClass + '-item',
-        hasSubClass = 'is-' + type + '-submenu-parent',
-        applyAria = type !== 'accordion'; // Accordions handle their own ARIA attriutes.
+var initClasses = ['mui-enter', 'mui-leave'];
+var activeClasses = ['mui-enter-active', 'mui-leave-active'];
 
-    items.each(function () {
-      var $item = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-          $sub = $item.children('ul');
-
-      if ($sub.length) {
-        $item.addClass(hasSubClass);
-        $sub.addClass('submenu ' + subMenuClass).attr({ 'data-submenu': '' });
-        if (applyAria) {
-          $item.attr({
-            'aria-haspopup': true,
-            'aria-label': $item.children('a:first').text()
-          });
-          // Note:  Drilldowns behave differently in how they hide, and so need
-          // additional attributes.  We should look if this possibly over-generalized
-          // utility (Nest) is appropriate when we rework menus in 6.4
-          if (type === 'drilldown') {
-            $item.attr({ 'aria-expanded': false });
-          }
-        }
-        $sub.addClass('submenu ' + subMenuClass).attr({
-          'data-submenu': '',
-          'role': 'menu'
-        });
-        if (type === 'drilldown') {
-          $sub.attr({ 'aria-hidden': true });
-        }
-      }
-
-      if ($item.parent('[data-submenu]').length) {
-        $item.addClass('is-submenu-item ' + subItemClass);
-      }
-    });
-
-    return;
+var Motion = {
+  animateIn: function (element, animation, cb) {
+    animate(true, element, animation, cb);
   },
-  Burn: function (menu, type) {
-    var //items = menu.find('li'),
-    subMenuClass = 'is-' + type + '-submenu',
-        subItemClass = subMenuClass + '-item',
-        hasSubClass = 'is-' + type + '-submenu-parent';
 
-    menu.find('>li, .menu, .menu > li').removeClass(subMenuClass + ' ' + subItemClass + ' ' + hasSubClass + ' is-submenu-item submenu is-active').removeAttr('data-submenu').css('display', '');
+  animateOut: function (element, animation, cb) {
+    animate(false, element, animation, cb);
   }
 };
+
+function Move(duration, elem, fn) {
+  var anim,
+      prog,
+      start = null;
+  // console.log('called');
+
+  if (duration === 0) {
+    fn.apply(elem);
+    elem.trigger('finished.zf.animate', [elem]).triggerHandler('finished.zf.animate', [elem]);
+    return;
+  }
+
+  function move(ts) {
+    if (!start) start = ts;
+    // console.log(start, ts);
+    prog = ts - start;
+    fn.apply(elem);
+
+    if (prog < duration) {
+      anim = window.requestAnimationFrame(move, elem);
+    } else {
+      window.cancelAnimationFrame(anim);
+      elem.trigger('finished.zf.animate', [elem]).triggerHandler('finished.zf.animate', [elem]);
+    }
+  }
+  anim = window.requestAnimationFrame(move);
+}
+
+/**
+ * Animates an element in or out using a CSS transition class.
+ * @function
+ * @private
+ * @param {Boolean} isIn - Defines if the animation is in or out.
+ * @param {Object} element - jQuery or HTML object to animate.
+ * @param {String} animation - CSS class to use.
+ * @param {Function} cb - Callback to run when animation is finished.
+ */
+function animate(isIn, element, animation, cb) {
+  element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(element).eq(0);
+
+  if (!element.length) return;
+
+  var initClass = isIn ? initClasses[0] : initClasses[1];
+  var activeClass = isIn ? activeClasses[0] : activeClasses[1];
+
+  // Set up the animation
+  reset();
+
+  element.addClass(animation).css('transition', 'none');
+
+  requestAnimationFrame(function () {
+    element.addClass(initClass);
+    if (isIn) element.show();
+  });
+
+  // Start the animation
+  requestAnimationFrame(function () {
+    element[0].offsetWidth;
+    element.css('transition', '').addClass(activeClass);
+  });
+
+  // Clean up the animation when it finishes
+  element.one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__foundation_util_core__["b" /* transitionend */])(element), finish);
+
+  // Hides the element (for out animations), resets the element, and runs a callback
+  function finish() {
+    if (!isIn) element.hide();
+    reset();
+    if (cb) cb.apply(element);
+  }
+
+  // Resets transitions and removes motion-specific classes
+  function reset() {
+    element[0].style.transitionDuration = 0;
+    element.removeClass(initClass + ' ' + activeClass + ' ' + animation);
+  }
+}
 
 
 
@@ -1230,116 +1272,2497 @@ function GetExplicitOffsets(element, anchor, position, alignment, vOffset, hOffs
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export Move */
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Motion; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Nest; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_core__ = __webpack_require__(1);
 
 
 
 
+var Nest = {
+  Feather: function (menu) {
+    var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'zf';
 
-/**
- * Motion module.
- * @module foundation.motion
- */
+    menu.attr('role', 'menubar');
 
-var initClasses = ['mui-enter', 'mui-leave'];
-var activeClasses = ['mui-enter-active', 'mui-leave-active'];
+    var items = menu.find('li').attr({ 'role': 'menuitem' }),
+        subMenuClass = 'is-' + type + '-submenu',
+        subItemClass = subMenuClass + '-item',
+        hasSubClass = 'is-' + type + '-submenu-parent',
+        applyAria = type !== 'accordion'; // Accordions handle their own ARIA attriutes.
 
-var Motion = {
-  animateIn: function (element, animation, cb) {
-    animate(true, element, animation, cb);
+    items.each(function () {
+      var $item = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+          $sub = $item.children('ul');
+
+      if ($sub.length) {
+        $item.addClass(hasSubClass);
+        $sub.addClass('submenu ' + subMenuClass).attr({ 'data-submenu': '' });
+        if (applyAria) {
+          $item.attr({
+            'aria-haspopup': true,
+            'aria-label': $item.children('a:first').text()
+          });
+          // Note:  Drilldowns behave differently in how they hide, and so need
+          // additional attributes.  We should look if this possibly over-generalized
+          // utility (Nest) is appropriate when we rework menus in 6.4
+          if (type === 'drilldown') {
+            $item.attr({ 'aria-expanded': false });
+          }
+        }
+        $sub.addClass('submenu ' + subMenuClass).attr({
+          'data-submenu': '',
+          'role': 'menu'
+        });
+        if (type === 'drilldown') {
+          $sub.attr({ 'aria-hidden': true });
+        }
+      }
+
+      if ($item.parent('[data-submenu]').length) {
+        $item.addClass('is-submenu-item ' + subItemClass);
+      }
+    });
+
+    return;
   },
+  Burn: function (menu, type) {
+    var //items = menu.find('li'),
+    subMenuClass = 'is-' + type + '-submenu',
+        subItemClass = subMenuClass + '-item',
+        hasSubClass = 'is-' + type + '-submenu-parent';
 
-  animateOut: function (element, animation, cb) {
-    animate(false, element, animation, cb);
+    menu.find('>li, .menu, .menu > li').removeClass(subMenuClass + ' ' + subItemClass + ' ' + hasSubClass + ' is-submenu-item submenu is-active').removeAttr('data-submenu').css('display', '');
   }
 };
 
-function Move(duration, elem, fn) {
-  var anim,
-      prog,
-      start = null;
-  // console.log('called');
 
-  if (duration === 0) {
-    fn.apply(elem);
-    elem.trigger('finished.zf.animate', [elem]).triggerHandler('finished.zf.animate', [elem]);
-    return;
-  }
 
-  function move(ts) {
-    if (!start) start = ts;
-    // console.log(start, ts);
-    prog = ts - start;
-    fn.apply(elem);
+/***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-    if (prog < duration) {
-      anim = window.requestAnimationFrame(move, elem);
-    } else {
-      window.cancelAnimationFrame(anim);
-      elem.trigger('finished.zf.animate', [elem]).triggerHandler('finished.zf.animate', [elem]);
-    }
-  }
-  anim = window.requestAnimationFrame(move);
-}
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AccordionMenu; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
 
 /**
- * Animates an element in or out using a CSS transition class.
- * @function
- * @private
- * @param {Boolean} isIn - Defines if the animation is in or out.
- * @param {Object} element - jQuery or HTML object to animate.
- * @param {String} animation - CSS class to use.
- * @param {Function} cb - Callback to run when animation is finished.
+ * AccordionMenu module.
+ * @module foundation.accordionMenu
+ * @requires foundation.util.keyboard
+ * @requires foundation.util.nest
  */
-function animate(isIn, element, animation, cb) {
-  element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(element).eq(0);
 
-  if (!element.length) return;
+var AccordionMenu = function (_Plugin) {
+  _inherits(AccordionMenu, _Plugin);
 
-  var initClass = isIn ? initClasses[0] : initClasses[1];
-  var activeClass = isIn ? activeClasses[0] : activeClasses[1];
+  function AccordionMenu() {
+    _classCallCheck(this, AccordionMenu);
 
-  // Set up the animation
-  reset();
-
-  element.addClass(animation).css('transition', 'none');
-
-  requestAnimationFrame(function () {
-    element.addClass(initClass);
-    if (isIn) element.show();
-  });
-
-  // Start the animation
-  requestAnimationFrame(function () {
-    element[0].offsetWidth;
-    element.css('transition', '').addClass(activeClass);
-  });
-
-  // Clean up the animation when it finishes
-  element.one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__foundation_util_core__["b" /* transitionend */])(element), finish);
-
-  // Hides the element (for out animations), resets the element, and runs a callback
-  function finish() {
-    if (!isIn) element.hide();
-    reset();
-    if (cb) cb.apply(element);
+    return _possibleConstructorReturn(this, (AccordionMenu.__proto__ || Object.getPrototypeOf(AccordionMenu)).apply(this, arguments));
   }
 
-  // Resets transitions and removes motion-specific classes
-  function reset() {
-    element[0].style.transitionDuration = 0;
-    element.removeClass(initClass + ' ' + activeClass + ' ' + animation);
+  _createClass(AccordionMenu, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of an accordion menu.
+     * @class
+     * @name AccordionMenu
+     * @fires AccordionMenu#init
+     * @param {jQuery} element - jQuery object to make into an accordion menu.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, AccordionMenu.defaults, this.$element.data(), options);
+      this.className = 'AccordionMenu'; // ie9 back compat
+
+      this._init();
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('AccordionMenu', {
+        'ENTER': 'toggle',
+        'SPACE': 'toggle',
+        'ARROW_RIGHT': 'open',
+        'ARROW_UP': 'up',
+        'ARROW_DOWN': 'down',
+        'ARROW_LEFT': 'close',
+        'ESCAPE': 'closeAll'
+      });
+    }
+
+    /**
+     * Initializes the accordion menu by hiding all nested menus.
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Feather(this.$element, 'accordion');
+
+      var _this = this;
+
+      this.$element.find('[data-submenu]').not('.is-active').slideUp(0); //.find('a').css('padding-left', '1rem');
+      this.$element.attr({
+        'role': 'tree',
+        'aria-multiselectable': this.options.multiOpen
+      });
+
+      this.$menuLinks = this.$element.find('.is-accordion-submenu-parent');
+      this.$menuLinks.each(function () {
+        var linkId = this.id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'acc-menu-link'),
+            $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+            $sub = $elem.children('[data-submenu]'),
+            subId = $sub[0].id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'acc-menu'),
+            isActive = $sub.hasClass('is-active');
+
+        if (_this.options.submenuToggle) {
+          $elem.addClass('has-submenu-toggle');
+          $elem.children('a').after('<button id="' + linkId + '" class="submenu-toggle" aria-controls="' + subId + '" aria-expanded="' + isActive + '" title="' + _this.options.submenuToggleText + '"><span class="submenu-toggle-text">' + _this.options.submenuToggleText + '</span></button>');
+        } else {
+          $elem.attr({
+            'aria-controls': subId,
+            'aria-expanded': isActive,
+            'id': linkId
+          });
+        }
+        $sub.attr({
+          'aria-labelledby': linkId,
+          'aria-hidden': !isActive,
+          'role': 'group',
+          'id': subId
+        });
+      });
+      this.$element.find('li').attr({
+        'role': 'treeitem'
+      });
+      var initPanes = this.$element.find('.is-active');
+      if (initPanes.length) {
+        var _this = this;
+        initPanes.each(function () {
+          _this.down(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this));
+        });
+      }
+      this._events();
+    }
+
+    /**
+     * Adds event handlers for items within the menu.
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this;
+
+      this.$element.find('li').each(function () {
+        var $submenu = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('[data-submenu]');
+
+        if ($submenu.length) {
+          if (_this.options.submenuToggle) {
+            __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('.submenu-toggle').off('click.zf.accordionMenu').on('click.zf.accordionMenu', function (e) {
+              _this.toggle($submenu);
+            });
+          } else {
+            __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('a').off('click.zf.accordionMenu').on('click.zf.accordionMenu', function (e) {
+              e.preventDefault();
+              _this.toggle($submenu);
+            });
+          }
+        }
+      }).on('keydown.zf.accordionmenu', function (e) {
+        var $element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+            $elements = $element.parent('ul').children('li'),
+            $prevElement,
+            $nextElement,
+            $target = $element.children('[data-submenu]');
+
+        $elements.each(function (i) {
+          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is($element)) {
+            $prevElement = $elements.eq(Math.max(0, i - 1)).find('a').first();
+            $nextElement = $elements.eq(Math.min(i + 1, $elements.length - 1)).find('a').first();
+
+            if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('[data-submenu]:visible').length) {
+              // has open sub menu
+              $nextElement = $element.find('li:first-child').find('a').first();
+            }
+            if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is(':first-child')) {
+              // is first element of sub menu
+              $prevElement = $element.parents('li').first().find('a').first();
+            } else if ($prevElement.parents('li').first().children('[data-submenu]:visible').length) {
+              // if previous element has open sub menu
+              $prevElement = $prevElement.parents('li').find('li:last-child').find('a').first();
+            }
+            if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is(':last-child')) {
+              // is last element of sub menu
+              $nextElement = $element.parents('li').first().next('li').find('a').first();
+            }
+
+            return;
+          }
+        });
+
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'AccordionMenu', {
+          open: function () {
+            if ($target.is(':hidden')) {
+              _this.down($target);
+              $target.find('li').first().find('a').first().focus();
+            }
+          },
+          close: function () {
+            if ($target.length && !$target.is(':hidden')) {
+              // close active sub of this item
+              _this.up($target);
+            } else if ($element.parent('[data-submenu]').length) {
+              // close currently open sub
+              _this.up($element.parent('[data-submenu]'));
+              $element.parents('li').first().find('a').first().focus();
+            }
+          },
+          up: function () {
+            $prevElement.focus();
+            return true;
+          },
+          down: function () {
+            $nextElement.focus();
+            return true;
+          },
+          toggle: function () {
+            if (_this.options.submenuToggle) {
+              return false;
+            }
+            if ($element.children('[data-submenu]').length) {
+              _this.toggle($element.children('[data-submenu]'));
+              return true;
+            }
+          },
+          closeAll: function () {
+            _this.hideAll();
+          },
+          handled: function (preventDefault) {
+            if (preventDefault) {
+              e.preventDefault();
+            }
+            e.stopImmediatePropagation();
+          }
+        });
+      }); //.attr('tabindex', 0);
+    }
+
+    /**
+     * Closes all panes of the menu.
+     * @function
+     */
+
+  }, {
+    key: 'hideAll',
+    value: function hideAll() {
+      this.up(this.$element.find('[data-submenu]'));
+    }
+
+    /**
+     * Opens all panes of the menu.
+     * @function
+     */
+
+  }, {
+    key: 'showAll',
+    value: function showAll() {
+      this.down(this.$element.find('[data-submenu]'));
+    }
+
+    /**
+     * Toggles the open/close state of a submenu.
+     * @function
+     * @param {jQuery} $target - the submenu to toggle
+     */
+
+  }, {
+    key: 'toggle',
+    value: function toggle($target) {
+      if (!$target.is(':animated')) {
+        if (!$target.is(':hidden')) {
+          this.up($target);
+        } else {
+          this.down($target);
+        }
+      }
+    }
+
+    /**
+     * Opens the sub-menu defined by `$target`.
+     * @param {jQuery} $target - Sub-menu to open.
+     * @fires AccordionMenu#down
+     */
+
+  }, {
+    key: 'down',
+    value: function down($target) {
+      var _this = this;
+
+      if (!this.options.multiOpen) {
+        this.up(this.$element.find('.is-active').not($target.parentsUntil(this.$element).add($target)));
+      }
+
+      $target.addClass('is-active').attr({ 'aria-hidden': false });
+
+      if (this.options.submenuToggle) {
+        $target.prev('.submenu-toggle').attr({ 'aria-expanded': true });
+      } else {
+        $target.parent('.is-accordion-submenu-parent').attr({ 'aria-expanded': true });
+      }
+
+      $target.slideDown(_this.options.slideSpeed, function () {
+        /**
+         * Fires when the menu is done opening.
+         * @event AccordionMenu#down
+         */
+        _this.$element.trigger('down.zf.accordionMenu', [$target]);
+      });
+    }
+
+    /**
+     * Closes the sub-menu defined by `$target`. All sub-menus inside the target will be closed as well.
+     * @param {jQuery} $target - Sub-menu to close.
+     * @fires AccordionMenu#up
+     */
+
+  }, {
+    key: 'up',
+    value: function up($target) {
+      var _this = this;
+      $target.slideUp(_this.options.slideSpeed, function () {
+        /**
+         * Fires when the menu is done collapsing up.
+         * @event AccordionMenu#up
+         */
+        _this.$element.trigger('up.zf.accordionMenu', [$target]);
+      });
+
+      var $menus = $target.find('[data-submenu]').slideUp(0).addBack().attr('aria-hidden', true);
+
+      if (this.options.submenuToggle) {
+        $menus.prev('.submenu-toggle').attr('aria-expanded', false);
+      } else {
+        $menus.parent('.is-accordion-submenu-parent').attr('aria-expanded', false);
+      }
+    }
+
+    /**
+     * Destroys an instance of accordion menu.
+     * @fires AccordionMenu#destroyed
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.$element.find('[data-submenu]').slideDown(0).css('display', '');
+      this.$element.find('a').off('click.zf.accordionMenu');
+
+      if (this.options.submenuToggle) {
+        this.$element.find('.has-submenu-toggle').removeClass('has-submenu-toggle');
+        this.$element.find('.submenu-toggle').remove();
+      }
+
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Burn(this.$element, 'accordion');
+    }
+  }]);
+
+  return AccordionMenu;
+}(__WEBPACK_IMPORTED_MODULE_4__foundation_plugin__["a" /* Plugin */]);
+
+AccordionMenu.defaults = {
+  /**
+   * Amount of time to animate the opening of a submenu in ms.
+   * @option
+   * @type {number}
+   * @default 250
+   */
+  slideSpeed: 250,
+  /**
+   * Adds a separate submenu toggle button. This allows the parent item to have a link.
+   * @option
+   * @example true
+   */
+  submenuToggle: false,
+  /**
+   * The text used for the submenu toggle if enabled. This is used for screen readers only.
+   * @option
+   * @example true
+   */
+  submenuToggleText: 'Toggle menu',
+  /**
+   * Allow the menu to have multiple open panes.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  multiOpen: true
+};
+
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Drilldown; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_util_box__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+
+/**
+ * Drilldown module.
+ * @module foundation.drilldown
+ * @requires foundation.util.keyboard
+ * @requires foundation.util.nest
+ * @requires foundation.util.box
+ */
+
+var Drilldown = function (_Plugin) {
+  _inherits(Drilldown, _Plugin);
+
+  function Drilldown() {
+    _classCallCheck(this, Drilldown);
+
+    return _possibleConstructorReturn(this, (Drilldown.__proto__ || Object.getPrototypeOf(Drilldown)).apply(this, arguments));
+  }
+
+  _createClass(Drilldown, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of a drilldown menu.
+     * @class
+     * @name Drilldown
+     * @param {jQuery} element - jQuery object to make into an accordion menu.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Drilldown.defaults, this.$element.data(), options);
+      this.className = 'Drilldown'; // ie9 back compat
+
+      this._init();
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('Drilldown', {
+        'ENTER': 'open',
+        'SPACE': 'open',
+        'ARROW_RIGHT': 'next',
+        'ARROW_UP': 'up',
+        'ARROW_DOWN': 'down',
+        'ARROW_LEFT': 'previous',
+        'ESCAPE': 'close',
+        'TAB': 'down',
+        'SHIFT_TAB': 'up'
+      });
+    }
+
+    /**
+     * Initializes the drilldown by creating jQuery collections of elements
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Feather(this.$element, 'drilldown');
+
+      if (this.options.autoApplyClass) {
+        this.$element.addClass('drilldown');
+      }
+
+      this.$element.attr({
+        'role': 'tree',
+        'aria-multiselectable': false
+      });
+      this.$submenuAnchors = this.$element.find('li.is-drilldown-submenu-parent').children('a');
+      this.$submenus = this.$submenuAnchors.parent('li').children('[data-submenu]').attr('role', 'group');
+      this.$menuItems = this.$element.find('li').not('.js-drilldown-back').attr('role', 'treeitem').find('a');
+      this.$element.attr('data-mutate', this.$element.attr('data-drilldown') || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'drilldown'));
+
+      this._prepareMenu();
+      this._registerEvents();
+
+      this._keyboardEvents();
+    }
+
+    /**
+     * prepares drilldown menu by setting attributes to links and elements
+     * sets a min height to prevent content jumping
+     * wraps the element if not already wrapped
+     * @private
+     * @function
+     */
+
+  }, {
+    key: '_prepareMenu',
+    value: function _prepareMenu() {
+      var _this = this;
+      // if(!this.options.holdOpen){
+      //   this._menuLinkEvents();
+      // }
+      this.$submenuAnchors.each(function () {
+        var $link = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this);
+        var $sub = $link.parent();
+        if (_this.options.parentLink) {
+          $link.clone().prependTo($sub.children('[data-submenu]')).wrap('<li class="is-submenu-parent-item is-submenu-item is-drilldown-submenu-item" role="menuitem"></li>');
+        }
+        $link.data('savedHref', $link.attr('href')).removeAttr('href').attr('tabindex', 0);
+        $link.children('[data-submenu]').attr({
+          'aria-hidden': true,
+          'tabindex': 0,
+          'role': 'group'
+        });
+        _this._events($link);
+      });
+      this.$submenus.each(function () {
+        var $menu = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+            $back = $menu.find('.js-drilldown-back');
+        if (!$back.length) {
+          switch (_this.options.backButtonPosition) {
+            case "bottom":
+              $menu.append(_this.options.backButton);
+              break;
+            case "top":
+              $menu.prepend(_this.options.backButton);
+              break;
+            default:
+              console.error("Unsupported backButtonPosition value '" + _this.options.backButtonPosition + "'");
+          }
+        }
+        _this._back($menu);
+      });
+
+      this.$submenus.addClass('invisible');
+      if (!this.options.autoHeight) {
+        this.$submenus.addClass('drilldown-submenu-cover-previous');
+      }
+
+      // create a wrapper on element if it doesn't exist.
+      if (!this.$element.parent().hasClass('is-drilldown')) {
+        this.$wrapper = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this.options.wrapper).addClass('is-drilldown');
+        if (this.options.animateHeight) this.$wrapper.addClass('animate-height');
+        this.$element.wrap(this.$wrapper);
+      }
+      // set wrapper
+      this.$wrapper = this.$element.parent();
+      this.$wrapper.css(this._getMaxDims());
+    }
+  }, {
+    key: '_resize',
+    value: function _resize() {
+      this.$wrapper.css({ 'max-width': 'none', 'min-height': 'none' });
+      // _getMaxDims has side effects (boo) but calling it should update all other necessary heights & widths
+      this.$wrapper.css(this._getMaxDims());
+    }
+
+    /**
+     * Adds event handlers to elements in the menu.
+     * @function
+     * @private
+     * @param {jQuery} $elem - the current menu item to add handlers to.
+     */
+
+  }, {
+    key: '_events',
+    value: function _events($elem) {
+      var _this = this;
+
+      $elem.off('click.zf.drilldown').on('click.zf.drilldown', function (e) {
+        if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).parentsUntil('ul', 'li').hasClass('is-drilldown-submenu-parent')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+
+        // if(e.target !== e.currentTarget.firstElementChild){
+        //   return false;
+        // }
+        _this._show($elem.parent('li'));
+
+        if (_this.options.closeOnClick) {
+          var $body = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('body');
+          $body.off('.zf.drilldown').on('click.zf.drilldown', function (e) {
+            if (e.target === _this.$element[0] || __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.contains(_this.$element[0], e.target)) {
+              return;
+            }
+            e.preventDefault();
+            _this._hideAll();
+            $body.off('.zf.drilldown');
+          });
+        }
+      });
+    }
+
+    /**
+     * Adds event handlers to the menu element.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_registerEvents',
+    value: function _registerEvents() {
+      if (this.options.scrollTop) {
+        this._bindHandler = this._scrollTop.bind(this);
+        this.$element.on('open.zf.drilldown hide.zf.drilldown closed.zf.drilldown', this._bindHandler);
+      }
+      this.$element.on('mutateme.zf.trigger', this._resize.bind(this));
+    }
+
+    /**
+     * Scroll to Top of Element or data-scroll-top-element
+     * @function
+     * @fires Drilldown#scrollme
+     */
+
+  }, {
+    key: '_scrollTop',
+    value: function _scrollTop() {
+      var _this = this;
+      var $scrollTopElement = _this.options.scrollTopElement != '' ? __WEBPACK_IMPORTED_MODULE_0_jquery___default()(_this.options.scrollTopElement) : _this.$element,
+          scrollPos = parseInt($scrollTopElement.offset().top + _this.options.scrollTopOffset, 10);
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()('html, body').stop(true).animate({ scrollTop: scrollPos }, _this.options.animationDuration, _this.options.animationEasing, function () {
+        /**
+          * Fires after the menu has scrolled
+          * @event Drilldown#scrollme
+          */
+        if (this === __WEBPACK_IMPORTED_MODULE_0_jquery___default()('html')[0]) _this.$element.trigger('scrollme.zf.drilldown');
+      });
+    }
+
+    /**
+     * Adds keydown event listener to `li`'s in the menu.
+     * @private
+     */
+
+  }, {
+    key: '_keyboardEvents',
+    value: function _keyboardEvents() {
+      var _this = this;
+
+      this.$menuItems.add(this.$element.find('.js-drilldown-back > a, .is-submenu-parent-item > a')).on('keydown.zf.drilldown', function (e) {
+        var $element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+            $elements = $element.parent('li').parent('ul').children('li').children('a'),
+            $prevElement,
+            $nextElement;
+
+        $elements.each(function (i) {
+          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is($element)) {
+            $prevElement = $elements.eq(Math.max(0, i - 1));
+            $nextElement = $elements.eq(Math.min(i + 1, $elements.length - 1));
+            return;
+          }
+        });
+
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'Drilldown', {
+          next: function () {
+            if ($element.is(_this.$submenuAnchors)) {
+              _this._show($element.parent('li'));
+              $element.parent('li').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
+                $element.parent('li').find('ul li a').filter(_this.$menuItems).first().focus();
+              });
+              return true;
+            }
+          },
+          previous: function () {
+            _this._hide($element.parent('li').parent('ul'));
+            $element.parent('li').parent('ul').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
+              setTimeout(function () {
+                $element.parent('li').parent('ul').parent('li').children('a').first().focus();
+              }, 1);
+            });
+            return true;
+          },
+          up: function () {
+            $prevElement.focus();
+            // Don't tap focus on first element in root ul
+            return !$element.is(_this.$element.find('> li:first-child > a'));
+          },
+          down: function () {
+            $nextElement.focus();
+            // Don't tap focus on last element in root ul
+            return !$element.is(_this.$element.find('> li:last-child > a'));
+          },
+          close: function () {
+            // Don't close on element in root ul
+            if (!$element.is(_this.$element.find('> li > a'))) {
+              _this._hide($element.parent().parent());
+              $element.parent().parent().siblings('a').focus();
+            }
+          },
+          open: function () {
+            if (!$element.is(_this.$menuItems)) {
+              // not menu item means back button
+              _this._hide($element.parent('li').parent('ul'));
+              $element.parent('li').parent('ul').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
+                setTimeout(function () {
+                  $element.parent('li').parent('ul').parent('li').children('a').first().focus();
+                }, 1);
+              });
+              return true;
+            } else if ($element.is(_this.$submenuAnchors)) {
+              _this._show($element.parent('li'));
+              $element.parent('li').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
+                $element.parent('li').find('ul li a').filter(_this.$menuItems).first().focus();
+              });
+              return true;
+            }
+          },
+          handled: function (preventDefault) {
+            if (preventDefault) {
+              e.preventDefault();
+            }
+            e.stopImmediatePropagation();
+          }
+        });
+      }); // end keyboardAccess
+    }
+
+    /**
+     * Closes all open elements, and returns to root menu.
+     * @function
+     * @fires Drilldown#closed
+     */
+
+  }, {
+    key: '_hideAll',
+    value: function _hideAll() {
+      var $elem = this.$element.find('.is-drilldown-submenu.is-active').addClass('is-closing');
+      if (this.options.autoHeight) this.$wrapper.css({ height: $elem.parent().closest('ul').data('calcHeight') });
+      $elem.one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($elem), function (e) {
+        $elem.removeClass('is-active is-closing');
+      });
+      /**
+       * Fires when the menu is fully closed.
+       * @event Drilldown#closed
+       */
+      this.$element.trigger('closed.zf.drilldown');
+    }
+
+    /**
+     * Adds event listener for each `back` button, and closes open menus.
+     * @function
+     * @fires Drilldown#back
+     * @param {jQuery} $elem - the current sub-menu to add `back` event.
+     */
+
+  }, {
+    key: '_back',
+    value: function _back($elem) {
+      var _this = this;
+      $elem.off('click.zf.drilldown');
+      $elem.children('.js-drilldown-back').on('click.zf.drilldown', function (e) {
+        e.stopImmediatePropagation();
+        // console.log('mouseup on back');
+        _this._hide($elem);
+
+        // If there is a parent submenu, call show
+        var parentSubMenu = $elem.parent('li').parent('ul').parent('li');
+        if (parentSubMenu.length) {
+          _this._show(parentSubMenu);
+        }
+      });
+    }
+
+    /**
+     * Adds event listener to menu items w/o submenus to close open menus on click.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_menuLinkEvents',
+    value: function _menuLinkEvents() {
+      var _this = this;
+      this.$menuItems.not('.is-drilldown-submenu-parent').off('click.zf.drilldown').on('click.zf.drilldown', function (e) {
+        // e.stopImmediatePropagation();
+        setTimeout(function () {
+          _this._hideAll();
+        }, 0);
+      });
+    }
+
+    /**
+     * Opens a submenu.
+     * @function
+     * @fires Drilldown#open
+     * @param {jQuery} $elem - the current element with a submenu to open, i.e. the `li` tag.
+     */
+
+  }, {
+    key: '_show',
+    value: function _show($elem) {
+      if (this.options.autoHeight) this.$wrapper.css({ height: $elem.children('[data-submenu]').data('calcHeight') });
+      $elem.attr('aria-expanded', true);
+      $elem.children('[data-submenu]').addClass('is-active').removeClass('invisible').attr('aria-hidden', false);
+      /**
+       * Fires when the submenu has opened.
+       * @event Drilldown#open
+       */
+      this.$element.trigger('open.zf.drilldown', [$elem]);
+    }
+  }, {
+    key: '_hide',
+
+
+    /**
+     * Hides a submenu
+     * @function
+     * @fires Drilldown#hide
+     * @param {jQuery} $elem - the current sub-menu to hide, i.e. the `ul` tag.
+     */
+    value: function _hide($elem) {
+      if (this.options.autoHeight) this.$wrapper.css({ height: $elem.parent().closest('ul').data('calcHeight') });
+      var _this = this;
+      $elem.parent('li').attr('aria-expanded', false);
+      $elem.attr('aria-hidden', true).addClass('is-closing');
+      $elem.addClass('is-closing').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($elem), function () {
+        $elem.removeClass('is-active is-closing');
+        $elem.blur().addClass('invisible');
+      });
+      /**
+       * Fires when the submenu has closed.
+       * @event Drilldown#hide
+       */
+      $elem.trigger('hide.zf.drilldown', [$elem]);
+    }
+
+    /**
+     * Iterates through the nested menus to calculate the min-height, and max-width for the menu.
+     * Prevents content jumping.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_getMaxDims',
+    value: function _getMaxDims() {
+      var maxHeight = 0,
+          result = {},
+          _this = this;
+      this.$submenus.add(this.$element).each(function () {
+        var numOfElems = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('li').length;
+        var height = __WEBPACK_IMPORTED_MODULE_4__foundation_util_box__["a" /* Box */].GetDimensions(this).height;
+        maxHeight = height > maxHeight ? height : maxHeight;
+        if (_this.options.autoHeight) {
+          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).data('calcHeight', height);
+          if (!__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).hasClass('is-drilldown-submenu')) result['height'] = height;
+        }
+      });
+
+      if (!this.options.autoHeight) result['min-height'] = maxHeight + 'px';
+
+      result['max-width'] = this.$element[0].getBoundingClientRect().width + 'px';
+
+      return result;
+    }
+
+    /**
+     * Destroys the Drilldown Menu
+     * @function
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      if (this.options.scrollTop) this.$element.off('.zf.drilldown', this._bindHandler);
+      this._hideAll();
+      this.$element.off('mutateme.zf.trigger');
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Burn(this.$element, 'drilldown');
+      this.$element.unwrap().find('.js-drilldown-back, .is-submenu-parent-item').remove().end().find('.is-active, .is-closing, .is-drilldown-submenu').removeClass('is-active is-closing is-drilldown-submenu').end().find('[data-submenu]').removeAttr('aria-hidden tabindex role');
+      this.$submenuAnchors.each(function () {
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).off('.zf.drilldown');
+      });
+
+      this.$submenus.removeClass('drilldown-submenu-cover-previous invisible');
+
+      this.$element.find('a').each(function () {
+        var $link = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this);
+        $link.removeAttr('tabindex');
+        if ($link.data('savedHref')) {
+          $link.attr('href', $link.data('savedHref')).removeData('savedHref');
+        } else {
+          return;
+        }
+      });
+    }
+  }]);
+
+  return Drilldown;
+}(__WEBPACK_IMPORTED_MODULE_5__foundation_plugin__["a" /* Plugin */]);
+
+Drilldown.defaults = {
+  /**
+   * Drilldowns depend on styles in order to function properly; in the default build of Foundation these are
+   * on the `drilldown` class. This option auto-applies this class to the drilldown upon initialization.
+   * @option
+   * @type {boolian}
+   * @default true
+   */
+  autoApplyClass: true,
+  /**
+   * Markup used for JS generated back button. Prepended  or appended (see backButtonPosition) to submenu lists and deleted on `destroy` method, 'js-drilldown-back' class required. Remove the backslash (`\`) if copy and pasting.
+   * @option
+   * @type {string}
+   * @default '<li class="js-drilldown-back"><a tabindex="0">Back</a></li>'
+   */
+  backButton: '<li class="js-drilldown-back"><a tabindex="0">Back</a></li>',
+  /**
+   * Position the back button either at the top or bottom of drilldown submenus. Can be `'left'` or `'bottom'`.
+   * @option
+   * @type {string}
+   * @default top
+   */
+  backButtonPosition: 'top',
+  /**
+   * Markup used to wrap drilldown menu. Use a class name for independent styling; the JS applied class: `is-drilldown` is required. Remove the backslash (`\`) if copy and pasting.
+   * @option
+   * @type {string}
+   * @default '<div></div>'
+   */
+  wrapper: '<div></div>',
+  /**
+   * Adds the parent link to the submenu.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  parentLink: false,
+  /**
+   * Allow the menu to return to root list on body click.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  closeOnClick: false,
+  /**
+   * Allow the menu to auto adjust height.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  autoHeight: false,
+  /**
+   * Animate the auto adjust height.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  animateHeight: false,
+  /**
+   * Scroll to the top of the menu after opening a submenu or navigating back using the menu back button
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  scrollTop: false,
+  /**
+   * String jquery selector (for example 'body') of element to take offset().top from, if empty string the drilldown menu offset().top is taken
+   * @option
+   * @type {string}
+   * @default ''
+   */
+  scrollTopElement: '',
+  /**
+   * ScrollTop offset
+   * @option
+   * @type {number}
+   * @default 0
+   */
+  scrollTopOffset: 0,
+  /**
+   * Scroll animation duration
+   * @option
+   * @type {number}
+   * @default 500
+   */
+  animationDuration: 500,
+  /**
+   * Scroll animation easing. Can be `'swing'` or `'linear'`.
+   * @option
+   * @type {string}
+   * @see {@link https://api.jquery.com/animate|JQuery animate}
+   * @default 'swing'
+   */
+  animationEasing: 'swing'
+  // holdOpen: false
+};
+
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DropdownMenu; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_box__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+
+/**
+ * DropdownMenu module.
+ * @module foundation.dropdown-menu
+ * @requires foundation.util.keyboard
+ * @requires foundation.util.box
+ * @requires foundation.util.nest
+ */
+
+var DropdownMenu = function (_Plugin) {
+  _inherits(DropdownMenu, _Plugin);
+
+  function DropdownMenu() {
+    _classCallCheck(this, DropdownMenu);
+
+    return _possibleConstructorReturn(this, (DropdownMenu.__proto__ || Object.getPrototypeOf(DropdownMenu)).apply(this, arguments));
+  }
+
+  _createClass(DropdownMenu, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of DropdownMenu.
+     * @class
+     * @name DropdownMenu
+     * @fires DropdownMenu#init
+     * @param {jQuery} element - jQuery object to make into a dropdown menu.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, DropdownMenu.defaults, this.$element.data(), options);
+      this.className = 'DropdownMenu'; // ie9 back compat
+
+      this._init();
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('DropdownMenu', {
+        'ENTER': 'open',
+        'SPACE': 'open',
+        'ARROW_RIGHT': 'next',
+        'ARROW_UP': 'up',
+        'ARROW_DOWN': 'down',
+        'ARROW_LEFT': 'previous',
+        'ESCAPE': 'close'
+      });
+    }
+
+    /**
+     * Initializes the plugin, and calls _prepareMenu
+     * @private
+     * @function
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Feather(this.$element, 'dropdown');
+
+      var subs = this.$element.find('li.is-dropdown-submenu-parent');
+      this.$element.children('.is-dropdown-submenu-parent').children('.is-dropdown-submenu').addClass('first-sub');
+
+      this.$menuItems = this.$element.find('[role="menuitem"]');
+      this.$tabs = this.$element.children('[role="menuitem"]');
+      this.$tabs.find('ul.is-dropdown-submenu').addClass(this.options.verticalClass);
+
+      if (this.options.alignment === 'auto') {
+        if (this.$element.hasClass(this.options.rightClass) || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__foundation_util_core__["c" /* rtl */])() || this.$element.parents('.top-bar-right').is('*')) {
+          this.options.alignment = 'right';
+          subs.addClass('opens-left');
+        } else {
+          this.options.alignment = 'left';
+          subs.addClass('opens-right');
+        }
+      } else {
+        if (this.options.alignment === 'right') {
+          subs.addClass('opens-left');
+        } else {
+          subs.addClass('opens-right');
+        }
+      }
+      this.changed = false;
+      this._events();
+    }
+  }, {
+    key: '_isVertical',
+    value: function _isVertical() {
+      return this.$tabs.css('display') === 'block' || this.$element.css('flex-direction') === 'column';
+    }
+  }, {
+    key: '_isRtl',
+    value: function _isRtl() {
+      return this.$element.hasClass('align-right') || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__foundation_util_core__["c" /* rtl */])() && !this.$element.hasClass('align-left');
+    }
+
+    /**
+     * Adds event listeners to elements within the menu
+     * @private
+     * @function
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this,
+          hasTouch = 'ontouchstart' in window || typeof window.ontouchstart !== 'undefined',
+          parClass = 'is-dropdown-submenu-parent';
+
+      // used for onClick and in the keyboard handlers
+      var handleClickFn = function (e) {
+        var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).parentsUntil('ul', '.' + parClass),
+            hasSub = $elem.hasClass(parClass),
+            hasClicked = $elem.attr('data-is-click') === 'true',
+            $sub = $elem.children('.is-dropdown-submenu');
+
+        if (hasSub) {
+          if (hasClicked) {
+            if (!_this.options.closeOnClick || !_this.options.clickOpen && !hasTouch || _this.options.forceFollow && hasTouch) {
+              return;
+            } else {
+              e.stopImmediatePropagation();
+              e.preventDefault();
+              _this._hide($elem);
+            }
+          } else {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            _this._show($sub);
+            $elem.add($elem.parentsUntil(_this.$element, '.' + parClass)).attr('data-is-click', true);
+          }
+        }
+      };
+
+      if (this.options.clickOpen || hasTouch) {
+        this.$menuItems.on('click.zf.dropdownmenu touchstart.zf.dropdownmenu', handleClickFn);
+      }
+
+      // Handle Leaf element Clicks
+      if (_this.options.closeOnClickInside) {
+        this.$menuItems.on('click.zf.dropdownmenu', function (e) {
+          var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+              hasSub = $elem.hasClass(parClass);
+          if (!hasSub) {
+            _this._hide();
+          }
+        });
+      }
+
+      if (!this.options.disableHover) {
+        this.$menuItems.on('mouseenter.zf.dropdownmenu', function (e) {
+          var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+              hasSub = $elem.hasClass(parClass);
+
+          if (hasSub) {
+            clearTimeout($elem.data('_delay'));
+            $elem.data('_delay', setTimeout(function () {
+              _this._show($elem.children('.is-dropdown-submenu'));
+            }, _this.options.hoverDelay));
+          }
+        }).on('mouseleave.zf.dropdownmenu', function (e) {
+          var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+              hasSub = $elem.hasClass(parClass);
+          if (hasSub && _this.options.autoclose) {
+            if ($elem.attr('data-is-click') === 'true' && _this.options.clickOpen) {
+              return false;
+            }
+
+            clearTimeout($elem.data('_delay'));
+            $elem.data('_delay', setTimeout(function () {
+              _this._hide($elem);
+            }, _this.options.closingTime));
+          }
+        });
+      }
+      this.$menuItems.on('keydown.zf.dropdownmenu', function (e) {
+        var $element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).parentsUntil('ul', '[role="menuitem"]'),
+            isTab = _this.$tabs.index($element) > -1,
+            $elements = isTab ? _this.$tabs : $element.siblings('li').add($element),
+            $prevElement,
+            $nextElement;
+
+        $elements.each(function (i) {
+          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is($element)) {
+            $prevElement = $elements.eq(i - 1);
+            $nextElement = $elements.eq(i + 1);
+            return;
+          }
+        });
+
+        var nextSibling = function () {
+          $nextElement.children('a:first').focus();
+          e.preventDefault();
+        },
+            prevSibling = function () {
+          $prevElement.children('a:first').focus();
+          e.preventDefault();
+        },
+            openSub = function () {
+          var $sub = $element.children('ul.is-dropdown-submenu');
+          if ($sub.length) {
+            _this._show($sub);
+            $element.find('li > a:first').focus();
+            e.preventDefault();
+          } else {
+            return;
+          }
+        },
+            closeSub = function () {
+          //if ($element.is(':first-child')) {
+          var close = $element.parent('ul').parent('li');
+          close.children('a:first').focus();
+          _this._hide(close);
+          e.preventDefault();
+          //}
+        };
+        var functions = {
+          open: openSub,
+          close: function () {
+            _this._hide(_this.$element);
+            _this.$menuItems.eq(0).children('a').focus(); // focus to first element
+            e.preventDefault();
+          },
+          handled: function () {
+            e.stopImmediatePropagation();
+          }
+        };
+
+        if (isTab) {
+          if (_this._isVertical()) {
+            // vertical menu
+            if (_this._isRtl()) {
+              // right aligned
+              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
+                down: nextSibling,
+                up: prevSibling,
+                next: closeSub,
+                previous: openSub
+              });
+            } else {
+              // left aligned
+              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
+                down: nextSibling,
+                up: prevSibling,
+                next: openSub,
+                previous: closeSub
+              });
+            }
+          } else {
+            // horizontal menu
+            if (_this._isRtl()) {
+              // right aligned
+              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
+                next: prevSibling,
+                previous: nextSibling,
+                down: openSub,
+                up: closeSub
+              });
+            } else {
+              // left aligned
+              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
+                next: nextSibling,
+                previous: prevSibling,
+                down: openSub,
+                up: closeSub
+              });
+            }
+          }
+        } else {
+          // not tabs -> one sub
+          if (_this._isRtl()) {
+            // right aligned
+            __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
+              next: closeSub,
+              previous: openSub,
+              down: nextSibling,
+              up: prevSibling
+            });
+          } else {
+            // left aligned
+            __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
+              next: openSub,
+              previous: closeSub,
+              down: nextSibling,
+              up: prevSibling
+            });
+          }
+        }
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'DropdownMenu', functions);
+      });
+    }
+
+    /**
+     * Adds an event handler to the body to close any dropdowns on a click.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_addBodyHandler',
+    value: function _addBodyHandler() {
+      var $body = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document.body),
+          _this = this;
+      $body.off('mouseup.zf.dropdownmenu touchend.zf.dropdownmenu').on('mouseup.zf.dropdownmenu touchend.zf.dropdownmenu', function (e) {
+        var $link = _this.$element.find(e.target);
+        if ($link.length) {
+          return;
+        }
+
+        _this._hide();
+        $body.off('mouseup.zf.dropdownmenu touchend.zf.dropdownmenu');
+      });
+    }
+
+    /**
+     * Opens a dropdown pane, and checks for collisions first.
+     * @param {jQuery} $sub - ul element that is a submenu to show
+     * @function
+     * @private
+     * @fires DropdownMenu#show
+     */
+
+  }, {
+    key: '_show',
+    value: function _show($sub) {
+      var idx = this.$tabs.index(this.$tabs.filter(function (i, el) {
+        return __WEBPACK_IMPORTED_MODULE_0_jquery___default()(el).find($sub).length > 0;
+      }));
+      var $sibs = $sub.parent('li.is-dropdown-submenu-parent').siblings('li.is-dropdown-submenu-parent');
+      this._hide($sibs, idx);
+      $sub.css('visibility', 'hidden').addClass('js-dropdown-active').parent('li.is-dropdown-submenu-parent').addClass('is-active');
+      var clear = __WEBPACK_IMPORTED_MODULE_3__foundation_util_box__["a" /* Box */].ImNotTouchingYou($sub, null, true);
+      if (!clear) {
+        var oldClass = this.options.alignment === 'left' ? '-right' : '-left',
+            $parentLi = $sub.parent('.is-dropdown-submenu-parent');
+        $parentLi.removeClass('opens' + oldClass).addClass('opens-' + this.options.alignment);
+        clear = __WEBPACK_IMPORTED_MODULE_3__foundation_util_box__["a" /* Box */].ImNotTouchingYou($sub, null, true);
+        if (!clear) {
+          $parentLi.removeClass('opens-' + this.options.alignment).addClass('opens-inner');
+        }
+        this.changed = true;
+      }
+      $sub.css('visibility', '');
+      if (this.options.closeOnClick) {
+        this._addBodyHandler();
+      }
+      /**
+       * Fires when the new dropdown pane is visible.
+       * @event DropdownMenu#show
+       */
+      this.$element.trigger('show.zf.dropdownmenu', [$sub]);
+    }
+
+    /**
+     * Hides a single, currently open dropdown pane, if passed a parameter, otherwise, hides everything.
+     * @function
+     * @param {jQuery} $elem - element with a submenu to hide
+     * @param {Number} idx - index of the $tabs collection to hide
+     * @private
+     */
+
+  }, {
+    key: '_hide',
+    value: function _hide($elem, idx) {
+      var $toClose;
+      if ($elem && $elem.length) {
+        $toClose = $elem;
+      } else if (idx !== undefined) {
+        $toClose = this.$tabs.not(function (i, el) {
+          return i === idx;
+        });
+      } else {
+        $toClose = this.$element;
+      }
+      var somethingToClose = $toClose.hasClass('is-active') || $toClose.find('.is-active').length > 0;
+
+      if (somethingToClose) {
+        $toClose.find('li.is-active').add($toClose).attr({
+          'data-is-click': false
+        }).removeClass('is-active');
+
+        $toClose.find('ul.js-dropdown-active').removeClass('js-dropdown-active');
+
+        if (this.changed || $toClose.find('opens-inner').length) {
+          var oldClass = this.options.alignment === 'left' ? 'right' : 'left';
+          $toClose.find('li.is-dropdown-submenu-parent').add($toClose).removeClass('opens-inner opens-' + this.options.alignment).addClass('opens-' + oldClass);
+          this.changed = false;
+        }
+        /**
+         * Fires when the open menus are closed.
+         * @event DropdownMenu#hide
+         */
+        this.$element.trigger('hide.zf.dropdownmenu', [$toClose]);
+      }
+    }
+
+    /**
+     * Destroys the plugin.
+     * @function
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.$menuItems.off('.zf.dropdownmenu').removeAttr('data-is-click').removeClass('is-right-arrow is-left-arrow is-down-arrow opens-right opens-left opens-inner');
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document.body).off('.zf.dropdownmenu');
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Burn(this.$element, 'dropdown');
+    }
+  }]);
+
+  return DropdownMenu;
+}(__WEBPACK_IMPORTED_MODULE_5__foundation_plugin__["a" /* Plugin */]);
+
+/**
+ * Default settings for plugin
+ */
+
+
+DropdownMenu.defaults = {
+  /**
+   * Disallows hover events from opening submenus
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  disableHover: false,
+  /**
+   * Allow a submenu to automatically close on a mouseleave event, if not clicked open.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  autoclose: true,
+  /**
+   * Amount of time to delay opening a submenu on hover event.
+   * @option
+   * @type {number}
+   * @default 50
+   */
+  hoverDelay: 50,
+  /**
+   * Allow a submenu to open/remain open on parent click event. Allows cursor to move away from menu.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  clickOpen: false,
+  /**
+   * Amount of time to delay closing a submenu on a mouseleave event.
+   * @option
+   * @type {number}
+   * @default 500
+   */
+
+  closingTime: 500,
+  /**
+   * Position of the menu relative to what direction the submenus should open. Handled by JS. Can be `'auto'`, `'left'` or `'right'`.
+   * @option
+   * @type {string}
+   * @default 'auto'
+   */
+  alignment: 'auto',
+  /**
+   * Allow clicks on the body to close any open submenus.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  closeOnClick: true,
+  /**
+   * Allow clicks on leaf anchor links to close any open submenus.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  closeOnClickInside: true,
+  /**
+   * Class applied to vertical oriented menus, Foundation default is `vertical`. Update this if using your own class.
+   * @option
+   * @type {string}
+   * @default 'vertical'
+   */
+  verticalClass: 'vertical',
+  /**
+   * Class applied to right-side oriented menus, Foundation default is `align-right`. Update this if using your own class.
+   * @option
+   * @type {string}
+   * @default 'align-right'
+   */
+  rightClass: 'align-right',
+  /**
+   * Boolean to force overide the clicking of links to perform default action, on second touch event for mobile.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  forceFollow: true
+};
+
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SmoothScroll; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+/**
+ * SmoothScroll module.
+ * @module foundation.smooth-scroll
+ */
+
+var SmoothScroll = function (_Plugin) {
+    _inherits(SmoothScroll, _Plugin);
+
+    function SmoothScroll() {
+        _classCallCheck(this, SmoothScroll);
+
+        return _possibleConstructorReturn(this, (SmoothScroll.__proto__ || Object.getPrototypeOf(SmoothScroll)).apply(this, arguments));
+    }
+
+    _createClass(SmoothScroll, [{
+        key: '_setup',
+
+        /**
+         * Creates a new instance of SmoothScroll.
+         * @class
+         * @name SmoothScroll
+         * @fires SmoothScroll#init
+         * @param {Object} element - jQuery object to add the trigger to.
+         * @param {Object} options - Overrides to the default plugin settings.
+         */
+        value: function _setup(element, options) {
+            this.$element = element;
+            this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, SmoothScroll.defaults, this.$element.data(), options);
+            this.className = 'SmoothScroll'; // ie9 back compat
+
+            this._init();
+        }
+
+        /**
+         * Initialize the SmoothScroll plugin
+         * @private
+         */
+
+    }, {
+        key: '_init',
+        value: function _init() {
+            var id = this.$element[0].id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__foundation_util_core__["a" /* GetYoDigits */])(6, 'smooth-scroll');
+            var _this = this;
+            this.$element.attr({
+                'id': id
+            });
+
+            this._events();
+        }
+
+        /**
+         * Initializes events for SmoothScroll.
+         * @private
+         */
+
+    }, {
+        key: '_events',
+        value: function _events() {
+            var _this = this;
+
+            // click handler function.
+            var handleLinkClick = function (e) {
+                // exit function if the event source isn't coming from an anchor with href attribute starts with '#'
+                if (!__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is('a[href^="#"]')) {
+                    return false;
+                }
+
+                var arrival = this.getAttribute('href');
+
+                _this._inTransition = true;
+
+                SmoothScroll.scrollToLoc(arrival, _this.options, function () {
+                    _this._inTransition = false;
+                });
+
+                e.preventDefault();
+            };
+
+            this.$element.on('click.zf.smoothScroll', handleLinkClick);
+            this.$element.on('click.zf.smoothScroll', 'a[href^="#"]', handleLinkClick);
+        }
+
+        /**
+         * Function to scroll to a given location on the page.
+         * @param {String} loc - A properly formatted jQuery id selector. Example: '#foo'
+         * @param {Object} options - The options to use.
+         * @param {Function} callback - The callback function.
+         * @static
+         * @function
+         */
+
+    }], [{
+        key: 'scrollToLoc',
+        value: function scrollToLoc(loc) {
+            var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : SmoothScroll.defaults;
+            var callback = arguments[2];
+
+            // Do nothing if target does not exist to prevent errors
+            if (!__WEBPACK_IMPORTED_MODULE_0_jquery___default()(loc).length) {
+                return false;
+            }
+
+            var scrollPos = Math.round(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(loc).offset().top - options.threshold / 2 - options.offset);
+
+            __WEBPACK_IMPORTED_MODULE_0_jquery___default()('html, body').stop(true).animate({ scrollTop: scrollPos }, options.animationDuration, options.animationEasing, function () {
+                if (callback && typeof callback == "function") {
+                    callback();
+                }
+            });
+        }
+    }]);
+
+    return SmoothScroll;
+}(__WEBPACK_IMPORTED_MODULE_2__foundation_plugin__["a" /* Plugin */]);
+
+/**
+ * Default settings for plugin.
+ */
+
+
+SmoothScroll.defaults = {
+    /**
+     * Amount of time, in ms, the animated scrolling should take between locations.
+     * @option
+     * @type {number}
+     * @default 500
+     */
+    animationDuration: 500,
+    /**
+     * Animation style to use when scrolling between locations. Can be `'swing'` or `'linear'`.
+     * @option
+     * @type {string}
+     * @default 'linear'
+     * @see {@link https://api.jquery.com/animate|Jquery animate}
+     */
+    animationEasing: 'linear',
+    /**
+     * Number of pixels to use as a marker for location changes.
+     * @option
+     * @type {number}
+     * @default 50
+     */
+    threshold: 50,
+    /**
+     * Number of pixels to offset the scroll of the page on item click if using a sticky nav bar.
+     * @option
+     * @type {number}
+     * @default 0
+     */
+    offset: 0
+};
+
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return onImagesLoaded; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+
+
+
+
+/**
+ * Runs a callback function when images are fully loaded.
+ * @param {Object} images - Image(s) to check if loaded.
+ * @param {Func} callback - Function to execute when image is fully loaded.
+ */
+function onImagesLoaded(images, callback) {
+  var self = this,
+      unloaded = images.length;
+
+  if (unloaded === 0) {
+    callback();
+  }
+
+  images.each(function () {
+    // Check if image is loaded
+    if (this.complete && this.naturalWidth !== undefined) {
+      singleImageLoaded();
+    } else {
+      // If the above check failed, simulate loading on detached element.
+      var image = new Image();
+      // Still count image as loaded if it finalizes with an error.
+      var events = "load.zf.images error.zf.images";
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(image).one(events, function me(event) {
+        // Unbind the event listeners. We're using 'one' but only one of the two events will have fired.
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).off(events, me);
+        singleImageLoaded();
+      });
+      image.src = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).attr('src');
+    }
+  });
+
+  function singleImageLoaded() {
+    unloaded--;
+    if (unloaded === 0) {
+      callback();
+    }
   }
 }
 
 
 
 /***/ }),
-/* 9 */
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Abide; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+/**
+ * Abide module.
+ * @module foundation.abide
+ */
+
+var Abide = function (_Plugin) {
+  _inherits(Abide, _Plugin);
+
+  function Abide() {
+    _classCallCheck(this, Abide);
+
+    return _possibleConstructorReturn(this, (Abide.__proto__ || Object.getPrototypeOf(Abide)).apply(this, arguments));
+  }
+
+  _createClass(Abide, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of Abide.
+     * @class
+     * @name Abide
+     * @fires Abide#init
+     * @param {Object} element - jQuery object to add the trigger to.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(true, {}, Abide.defaults, this.$element.data(), options);
+
+      this.className = 'Abide'; // ie9 back compat
+      this._init();
+    }
+
+    /**
+     * Initializes the Abide plugin and calls functions to get Abide functioning on load.
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      this.$inputs = this.$element.find('input, textarea, select');
+
+      this._events();
+    }
+
+    /**
+     * Initializes events for Abide.
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this3 = this;
+
+      this.$element.off('.abide').on('reset.zf.abide', function () {
+        _this3.resetForm();
+      }).on('submit.zf.abide', function () {
+        return _this3.validateForm();
+      });
+
+      if (this.options.validateOn === 'fieldChange') {
+        this.$inputs.off('change.zf.abide').on('change.zf.abide', function (e) {
+          _this3.validateInput(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target));
+        });
+      }
+
+      if (this.options.liveValidate) {
+        this.$inputs.off('input.zf.abide').on('input.zf.abide', function (e) {
+          _this3.validateInput(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target));
+        });
+      }
+
+      if (this.options.validateOnBlur) {
+        this.$inputs.off('blur.zf.abide').on('blur.zf.abide', function (e) {
+          _this3.validateInput(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target));
+        });
+      }
+    }
+
+    /**
+     * Calls necessary functions to update Abide upon DOM change
+     * @private
+     */
+
+  }, {
+    key: '_reflow',
+    value: function _reflow() {
+      this._init();
+    }
+
+    /**
+     * Checks whether or not a form element has the required attribute and if it's checked or not
+     * @param {Object} element - jQuery object to check for required attribute
+     * @returns {Boolean} Boolean value depends on whether or not attribute is checked or empty
+     */
+
+  }, {
+    key: 'requiredCheck',
+    value: function requiredCheck($el) {
+      if (!$el.attr('required')) return true;
+
+      var isGood = true;
+
+      switch ($el[0].type) {
+        case 'checkbox':
+          isGood = $el[0].checked;
+          break;
+
+        case 'select':
+        case 'select-one':
+        case 'select-multiple':
+          var opt = $el.find('option:selected');
+          if (!opt.length || !opt.val()) isGood = false;
+          break;
+
+        default:
+          if (!$el.val() || !$el.val().length) isGood = false;
+      }
+
+      return isGood;
+    }
+
+    /**
+     * Get:
+     * - Based on $el, the first element(s) corresponding to `formErrorSelector` in this order:
+     *   1. The element's direct sibling('s).
+     *   2. The element's parent's children.
+     * - Element(s) with the attribute `[data-form-error-for]` set with the element's id.
+     *
+     * This allows for multiple form errors per input, though if none are found, no form errors will be shown.
+     *
+     * @param {Object} $el - jQuery object to use as reference to find the form error selector.
+     * @returns {Object} jQuery object with the selector.
+     */
+
+  }, {
+    key: 'findFormError',
+    value: function findFormError($el) {
+      var id = $el[0].id;
+      var $error = $el.siblings(this.options.formErrorSelector);
+
+      if (!$error.length) {
+        $error = $el.parent().find(this.options.formErrorSelector);
+      }
+
+      $error = $error.add(this.$element.find('[data-form-error-for="' + id + '"]'));
+
+      return $error;
+    }
+
+    /**
+     * Get the first element in this order:
+     * 2. The <label> with the attribute `[for="someInputId"]`
+     * 3. The `.closest()` <label>
+     *
+     * @param {Object} $el - jQuery object to check for required attribute
+     * @returns {Boolean} Boolean value depends on whether or not attribute is checked or empty
+     */
+
+  }, {
+    key: 'findLabel',
+    value: function findLabel($el) {
+      var id = $el[0].id;
+      var $label = this.$element.find('label[for="' + id + '"]');
+
+      if (!$label.length) {
+        return $el.closest('label');
+      }
+
+      return $label;
+    }
+
+    /**
+     * Get the set of labels associated with a set of radio els in this order
+     * 2. The <label> with the attribute `[for="someInputId"]`
+     * 3. The `.closest()` <label>
+     *
+     * @param {Object} $el - jQuery object to check for required attribute
+     * @returns {Boolean} Boolean value depends on whether or not attribute is checked or empty
+     */
+
+  }, {
+    key: 'findRadioLabels',
+    value: function findRadioLabels($els) {
+      var _this4 = this;
+
+      var labels = $els.map(function (i, el) {
+        var id = el.id;
+        var $label = _this4.$element.find('label[for="' + id + '"]');
+
+        if (!$label.length) {
+          $label = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(el).closest('label');
+        }
+        return $label[0];
+      });
+
+      return __WEBPACK_IMPORTED_MODULE_0_jquery___default()(labels);
+    }
+
+    /**
+     * Adds the CSS error class as specified by the Abide settings to the label, input, and the form
+     * @param {Object} $el - jQuery object to add the class to
+     */
+
+  }, {
+    key: 'addErrorClasses',
+    value: function addErrorClasses($el) {
+      var $label = this.findLabel($el);
+      var $formError = this.findFormError($el);
+
+      if ($label.length) {
+        $label.addClass(this.options.labelErrorClass);
+      }
+
+      if ($formError.length) {
+        $formError.addClass(this.options.formErrorClass);
+      }
+
+      $el.addClass(this.options.inputErrorClass).attr('data-invalid', '');
+    }
+
+    /**
+     * Remove CSS error classes etc from an entire radio button group
+     * @param {String} groupName - A string that specifies the name of a radio button group
+     *
+     */
+
+  }, {
+    key: 'removeRadioErrorClasses',
+    value: function removeRadioErrorClasses(groupName) {
+      var $els = this.$element.find(':radio[name="' + groupName + '"]');
+      var $labels = this.findRadioLabels($els);
+      var $formErrors = this.findFormError($els);
+
+      if ($labels.length) {
+        $labels.removeClass(this.options.labelErrorClass);
+      }
+
+      if ($formErrors.length) {
+        $formErrors.removeClass(this.options.formErrorClass);
+      }
+
+      $els.removeClass(this.options.inputErrorClass).removeAttr('data-invalid');
+    }
+
+    /**
+     * Removes CSS error class as specified by the Abide settings from the label, input, and the form
+     * @param {Object} $el - jQuery object to remove the class from
+     */
+
+  }, {
+    key: 'removeErrorClasses',
+    value: function removeErrorClasses($el) {
+      // radios need to clear all of the els
+      if ($el[0].type == 'radio') {
+        return this.removeRadioErrorClasses($el.attr('name'));
+      }
+
+      var $label = this.findLabel($el);
+      var $formError = this.findFormError($el);
+
+      if ($label.length) {
+        $label.removeClass(this.options.labelErrorClass);
+      }
+
+      if ($formError.length) {
+        $formError.removeClass(this.options.formErrorClass);
+      }
+
+      $el.removeClass(this.options.inputErrorClass).removeAttr('data-invalid');
+    }
+
+    /**
+     * Goes through a form to find inputs and proceeds to validate them in ways specific to their type.
+     * Ignores inputs with data-abide-ignore, type="hidden" or disabled attributes set
+     * @fires Abide#invalid
+     * @fires Abide#valid
+     * @param {Object} element - jQuery object to validate, should be an HTML input
+     * @returns {Boolean} goodToGo - If the input is valid or not.
+     */
+
+  }, {
+    key: 'validateInput',
+    value: function validateInput($el) {
+      var _this5 = this;
+
+      var clearRequire = this.requiredCheck($el),
+          validated = false,
+          customValidator = true,
+          validator = $el.attr('data-validator'),
+          equalTo = true;
+
+      // don't validate ignored inputs or hidden inputs or disabled inputs
+      if ($el.is('[data-abide-ignore]') || $el.is('[type="hidden"]') || $el.is('[disabled]')) {
+        return true;
+      }
+
+      switch ($el[0].type) {
+        case 'radio':
+          validated = this.validateRadio($el.attr('name'));
+          break;
+
+        case 'checkbox':
+          validated = clearRequire;
+          break;
+
+        case 'select':
+        case 'select-one':
+        case 'select-multiple':
+          validated = clearRequire;
+          break;
+
+        default:
+          validated = this.validateText($el);
+      }
+
+      if (validator) {
+        customValidator = this.matchValidation($el, validator, $el.attr('required'));
+      }
+
+      if ($el.attr('data-equalto')) {
+        equalTo = this.options.validators.equalTo($el);
+      }
+
+      var goodToGo = [clearRequire, validated, customValidator, equalTo].indexOf(false) === -1;
+      var message = (goodToGo ? 'valid' : 'invalid') + '.zf.abide';
+
+      if (goodToGo) {
+        // Re-validate inputs that depend on this one with equalto
+        var dependentElements = this.$element.find('[data-equalto="' + $el.attr('id') + '"]');
+        if (dependentElements.length) {
+          (function () {
+            var _this = _this5;
+            dependentElements.each(function () {
+              if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).val()) {
+                _this.validateInput(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this));
+              }
+            });
+          })();
+        }
+      }
+
+      this[goodToGo ? 'removeErrorClasses' : 'addErrorClasses']($el);
+
+      /**
+       * Fires when the input is done checking for validation. Event trigger is either `valid.zf.abide` or `invalid.zf.abide`
+       * Trigger includes the DOM element of the input.
+       * @event Abide#valid
+       * @event Abide#invalid
+       */
+      $el.trigger(message, [$el]);
+
+      return goodToGo;
+    }
+
+    /**
+     * Goes through a form and if there are any invalid inputs, it will display the form error element
+     * @returns {Boolean} noError - true if no errors were detected...
+     * @fires Abide#formvalid
+     * @fires Abide#forminvalid
+     */
+
+  }, {
+    key: 'validateForm',
+    value: function validateForm() {
+      var acc = [];
+      var _this = this;
+
+      this.$inputs.each(function () {
+        acc.push(_this.validateInput(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this)));
+      });
+
+      var noError = acc.indexOf(false) === -1;
+
+      this.$element.find('[data-abide-error]').css('display', noError ? 'none' : 'block');
+
+      /**
+       * Fires when the form is finished validating. Event trigger is either `formvalid.zf.abide` or `forminvalid.zf.abide`.
+       * Trigger includes the element of the form.
+       * @event Abide#formvalid
+       * @event Abide#forminvalid
+       */
+      this.$element.trigger((noError ? 'formvalid' : 'forminvalid') + '.zf.abide', [this.$element]);
+
+      return noError;
+    }
+
+    /**
+     * Determines whether or a not a text input is valid based on the pattern specified in the attribute. If no matching pattern is found, returns true.
+     * @param {Object} $el - jQuery object to validate, should be a text input HTML element
+     * @param {String} pattern - string value of one of the RegEx patterns in Abide.options.patterns
+     * @returns {Boolean} Boolean value depends on whether or not the input value matches the pattern specified
+     */
+
+  }, {
+    key: 'validateText',
+    value: function validateText($el, pattern) {
+      // A pattern can be passed to this function, or it will be infered from the input's "pattern" attribute, or it's "type" attribute
+      pattern = pattern || $el.attr('pattern') || $el.attr('type');
+      var inputText = $el.val();
+      var valid = false;
+
+      if (inputText.length) {
+        // If the pattern attribute on the element is in Abide's list of patterns, then test that regexp
+        if (this.options.patterns.hasOwnProperty(pattern)) {
+          valid = this.options.patterns[pattern].test(inputText);
+        }
+        // If the pattern name isn't also the type attribute of the field, then test it as a regexp
+        else if (pattern !== $el.attr('type')) {
+            valid = new RegExp(pattern).test(inputText);
+          } else {
+            valid = true;
+          }
+      }
+      // An empty field is valid if it's not required
+      else if (!$el.prop('required')) {
+          valid = true;
+        }
+
+      return valid;
+    }
+
+    /**
+     * Determines whether or a not a radio input is valid based on whether or not it is required and selected. Although the function targets a single `<input>`, it validates by checking the `required` and `checked` properties of all radio buttons in its group.
+     * @param {String} groupName - A string that specifies the name of a radio button group
+     * @returns {Boolean} Boolean value depends on whether or not at least one radio input has been selected (if it's required)
+     */
+
+  }, {
+    key: 'validateRadio',
+    value: function validateRadio(groupName) {
+      // If at least one radio in the group has the `required` attribute, the group is considered required
+      // Per W3C spec, all radio buttons in a group should have `required`, but we're being nice
+      var $group = this.$element.find(':radio[name="' + groupName + '"]');
+      var valid = false,
+          required = false;
+
+      // For the group to be required, at least one radio needs to be required
+      $group.each(function (i, e) {
+        if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e).attr('required')) {
+          required = true;
+        }
+      });
+      if (!required) valid = true;
+
+      if (!valid) {
+        // For the group to be valid, at least one radio needs to be checked
+        $group.each(function (i, e) {
+          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e).prop('checked')) {
+            valid = true;
+          }
+        });
+      };
+
+      return valid;
+    }
+
+    /**
+     * Determines if a selected input passes a custom validation function. Multiple validations can be used, if passed to the element with `data-validator="foo bar baz"` in a space separated listed.
+     * @param {Object} $el - jQuery input element.
+     * @param {String} validators - a string of function names matching functions in the Abide.options.validators object.
+     * @param {Boolean} required - self explanatory?
+     * @returns {Boolean} - true if validations passed.
+     */
+
+  }, {
+    key: 'matchValidation',
+    value: function matchValidation($el, validators, required) {
+      var _this6 = this;
+
+      required = required ? true : false;
+
+      var clear = validators.split(' ').map(function (v) {
+        return _this6.options.validators[v]($el, required, $el.parent());
+      });
+      return clear.indexOf(false) === -1;
+    }
+
+    /**
+     * Resets form inputs and styles
+     * @fires Abide#formreset
+     */
+
+  }, {
+    key: 'resetForm',
+    value: function resetForm() {
+      var $form = this.$element,
+          opts = this.options;
+
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()('.' + opts.labelErrorClass, $form).not('small').removeClass(opts.labelErrorClass);
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()('.' + opts.inputErrorClass, $form).not('small').removeClass(opts.inputErrorClass);
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(opts.formErrorSelector + '.' + opts.formErrorClass).removeClass(opts.formErrorClass);
+      $form.find('[data-abide-error]').css('display', 'none');
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(':input', $form).not(':button, :submit, :reset, :hidden, :radio, :checkbox, [data-abide-ignore]').val('').removeAttr('data-invalid');
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(':input:radio', $form).not('[data-abide-ignore]').prop('checked', false).removeAttr('data-invalid');
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(':input:checkbox', $form).not('[data-abide-ignore]').prop('checked', false).removeAttr('data-invalid');
+      /**
+       * Fires when the form has been reset.
+       * @event Abide#formreset
+       */
+      $form.trigger('formreset.zf.abide', [$form]);
+    }
+
+    /**
+     * Destroys an instance of Abide.
+     * Removes error styles and classes from elements, without resetting their values.
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      var _this = this;
+      this.$element.off('.abide').find('[data-abide-error]').css('display', 'none');
+
+      this.$inputs.off('.abide').each(function () {
+        _this.removeErrorClasses(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this));
+      });
+    }
+  }]);
+
+  return Abide;
+}(__WEBPACK_IMPORTED_MODULE_1__foundation_plugin__["a" /* Plugin */]);
+
+/**
+ * Default settings for plugin
+ */
+
+
+Abide.defaults = {
+  /**
+   * The default event to validate inputs. Checkboxes and radios validate immediately.
+   * Remove or change this value for manual validation.
+   * @option
+   * @type {?string}
+   * @default 'fieldChange'
+   */
+  validateOn: 'fieldChange',
+
+  /**
+   * Class to be applied to input labels on failed validation.
+   * @option
+   * @type {string}
+   * @default 'is-invalid-label'
+   */
+  labelErrorClass: 'is-invalid-label',
+
+  /**
+   * Class to be applied to inputs on failed validation.
+   * @option
+   * @type {string}
+   * @default 'is-invalid-input'
+   */
+  inputErrorClass: 'is-invalid-input',
+
+  /**
+   * Class selector to use to target Form Errors for show/hide.
+   * @option
+   * @type {string}
+   * @default '.form-error'
+   */
+  formErrorSelector: '.form-error',
+
+  /**
+   * Class added to Form Errors on failed validation.
+   * @option
+   * @type {string}
+   * @default 'is-visible'
+   */
+  formErrorClass: 'is-visible',
+
+  /**
+   * Set to true to validate text inputs on any value change.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  liveValidate: false,
+
+  /**
+   * Set to true to validate inputs on blur.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  validateOnBlur: false,
+
+  patterns: {
+    alpha: /^[a-zA-Z]+$/,
+    alpha_numeric: /^[a-zA-Z0-9]+$/,
+    integer: /^[-+]?\d+$/,
+    number: /^[-+]?\d*(?:[\.\,]\d+)?$/,
+
+    // amex, visa, diners
+    card: /^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|(?:222[1-9]|2[3-6][0-9]{2}|27[0-1][0-9]|2720)[0-9]{12}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})$/,
+    cvv: /^([0-9]){3,4}$/,
+
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/states-of-the-type-attribute.html#valid-e-mail-address
+    email: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/,
+
+    url: /^(https?|ftp|file|ssh):\/\/(((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/,
+    // abc.de
+    domain: /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,8}$/,
+
+    datetime: /^([0-2][0-9]{3})\-([0-1][0-9])\-([0-3][0-9])T([0-5][0-9])\:([0-5][0-9])\:([0-5][0-9])(Z|([\-\+]([0-1][0-9])\:00))$/,
+    // YYYY-MM-DD
+    date: /(?:19|20)[0-9]{2}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-9])|(?:(?!02)(?:0[1-9]|1[0-2])-(?:30))|(?:(?:0[13578]|1[02])-31))$/,
+    // HH:MM:SS
+    time: /^(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){2}$/,
+    dateISO: /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/,
+    // MM/DD/YYYY
+    month_day_year: /^(0[1-9]|1[012])[- \/.](0[1-9]|[12][0-9]|3[01])[- \/.]\d{4}$/,
+    // DD/MM/YYYY
+    day_month_year: /^(0[1-9]|[12][0-9]|3[01])[- \/.](0[1-9]|1[012])[- \/.]\d{4}$/,
+
+    // #FFF or #FFFFFF
+    color: /^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/,
+
+    // Domain || URL
+    website: {
+      test: function (text) {
+        return Abide.defaults.patterns['domain'].test(text) || Abide.defaults.patterns['url'].test(text);
+      }
+    }
+  },
+
+  /**
+   * Optional validation functions to be used. `equalTo` being the only default included function.
+   * Functions should return only a boolean if the input is valid or not. Functions are given the following arguments:
+   * el : The jQuery element to validate.
+   * required : Boolean value of the required attribute be present or not.
+   * parent : The direct parent of the input.
+   * @option
+   */
+  validators: {
+    equalTo: function (el, required, parent) {
+      return __WEBPACK_IMPORTED_MODULE_0_jquery___default()('#' + el.attr('data-equalto')).val() === el.val();
+    }
+  }
+};
+
+
+
+/***/ }),
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1696,7 +4119,878 @@ function hyphenate(str) {
 
 
 /***/ }),
-/* 10 */
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Dropdown; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_positionable__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_util_triggers__ = __webpack_require__(5);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+
+/**
+ * Dropdown module.
+ * @module foundation.dropdown
+ * @requires foundation.util.keyboard
+ * @requires foundation.util.box
+ * @requires foundation.util.triggers
+ */
+
+var Dropdown = function (_Positionable) {
+  _inherits(Dropdown, _Positionable);
+
+  function Dropdown() {
+    _classCallCheck(this, Dropdown);
+
+    return _possibleConstructorReturn(this, (Dropdown.__proto__ || Object.getPrototypeOf(Dropdown)).apply(this, arguments));
+  }
+
+  _createClass(Dropdown, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of a dropdown.
+     * @class
+     * @name Dropdown
+     * @param {jQuery} element - jQuery object to make into a dropdown.
+     *        Object should be of the dropdown panel, rather than its anchor.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Dropdown.defaults, this.$element.data(), options);
+      this.className = 'Dropdown'; // ie9 back compat
+
+      // Triggers init is idempotent, just need to make sure it is initialized
+      __WEBPACK_IMPORTED_MODULE_4__foundation_util_triggers__["a" /* Triggers */].init(__WEBPACK_IMPORTED_MODULE_0_jquery___default.a);
+
+      this._init();
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('Dropdown', {
+        'ENTER': 'open',
+        'SPACE': 'open',
+        'ESCAPE': 'close'
+      });
+    }
+
+    /**
+     * Initializes the plugin by setting/checking options and attributes, adding helper variables, and saving the anchor.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      var $id = this.$element.attr('id');
+
+      this.$anchors = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('[data-toggle="' + $id + '"]').length ? __WEBPACK_IMPORTED_MODULE_0_jquery___default()('[data-toggle="' + $id + '"]') : __WEBPACK_IMPORTED_MODULE_0_jquery___default()('[data-open="' + $id + '"]');
+      this.$anchors.attr({
+        'aria-controls': $id,
+        'data-is-focus': false,
+        'data-yeti-box': $id,
+        'aria-haspopup': true,
+        'aria-expanded': false
+      });
+
+      this._setCurrentAnchor(this.$anchors.first());
+
+      if (this.options.parentClass) {
+        this.$parent = this.$element.parents('.' + this.options.parentClass);
+      } else {
+        this.$parent = null;
+      }
+
+      this.$element.attr({
+        'aria-hidden': 'true',
+        'data-yeti-box': $id,
+        'data-resize': $id,
+        'aria-labelledby': this.$currentAnchor.id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__foundation_util_core__["a" /* GetYoDigits */])(6, 'dd-anchor')
+      });
+      _get(Dropdown.prototype.__proto__ || Object.getPrototypeOf(Dropdown.prototype), '_init', this).call(this);
+      this._events();
+    }
+  }, {
+    key: '_getDefaultPosition',
+    value: function _getDefaultPosition() {
+      // handle legacy classnames
+      var position = this.$element[0].className.match(/(top|left|right|bottom)/g);
+      if (position) {
+        return position[0];
+      } else {
+        return 'bottom';
+      }
+    }
+  }, {
+    key: '_getDefaultAlignment',
+    value: function _getDefaultAlignment() {
+      // handle legacy float approach
+      var horizontalPosition = /float-(\S+)/.exec(this.$currentAnchor.className);
+      if (horizontalPosition) {
+        return horizontalPosition[1];
+      }
+
+      return _get(Dropdown.prototype.__proto__ || Object.getPrototypeOf(Dropdown.prototype), '_getDefaultAlignment', this).call(this);
+    }
+
+    /**
+     * Sets the position and orientation of the dropdown pane, checks for collisions if allow-overlap is not true.
+     * Recursively calls itself if a collision is detected, with a new position class.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_setPosition',
+    value: function _setPosition() {
+      _get(Dropdown.prototype.__proto__ || Object.getPrototypeOf(Dropdown.prototype), '_setPosition', this).call(this, this.$currentAnchor, this.$element, this.$parent);
+    }
+
+    /**
+     * Make it a current anchor.
+     * Current anchor as the reference for the position of Dropdown panes.
+     * @param {HTML} el - DOM element of the anchor.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_setCurrentAnchor',
+    value: function _setCurrentAnchor(el) {
+      this.$currentAnchor = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(el);
+    }
+
+    /**
+     * Adds event listeners to the element utilizing the triggers utility library.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this;
+      this.$element.on({
+        'open.zf.trigger': this.open.bind(this),
+        'close.zf.trigger': this.close.bind(this),
+        'toggle.zf.trigger': this.toggle.bind(this),
+        'resizeme.zf.trigger': this._setPosition.bind(this)
+      });
+
+      this.$anchors.off('click.zf.trigger').on('click.zf.trigger', function () {
+        _this._setCurrentAnchor(this);
+      });
+
+      if (this.options.hover) {
+        this.$anchors.off('mouseenter.zf.dropdown mouseleave.zf.dropdown').on('mouseenter.zf.dropdown', function () {
+          _this._setCurrentAnchor(this);
+
+          var bodyData = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('body').data();
+          if (typeof bodyData.whatinput === 'undefined' || bodyData.whatinput === 'mouse') {
+            clearTimeout(_this.timeout);
+            _this.timeout = setTimeout(function () {
+              _this.open();
+              _this.$anchors.data('hover', true);
+            }, _this.options.hoverDelay);
+          }
+        }).on('mouseleave.zf.dropdown', function () {
+          clearTimeout(_this.timeout);
+          _this.timeout = setTimeout(function () {
+            _this.close();
+            _this.$anchors.data('hover', false);
+          }, _this.options.hoverDelay);
+        });
+        if (this.options.hoverPane) {
+          this.$element.off('mouseenter.zf.dropdown mouseleave.zf.dropdown').on('mouseenter.zf.dropdown', function () {
+            clearTimeout(_this.timeout);
+          }).on('mouseleave.zf.dropdown', function () {
+            clearTimeout(_this.timeout);
+            _this.timeout = setTimeout(function () {
+              _this.close();
+              _this.$anchors.data('hover', false);
+            }, _this.options.hoverDelay);
+          });
+        }
+      }
+      this.$anchors.add(this.$element).on('keydown.zf.dropdown', function (e) {
+
+        var $target = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+            visibleFocusableElements = __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].findFocusable(_this.$element);
+
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'Dropdown', {
+          open: function () {
+            if ($target.is(_this.$anchors)) {
+              _this.open();
+              _this.$element.attr('tabindex', -1).focus();
+              e.preventDefault();
+            }
+          },
+          close: function () {
+            _this.close();
+            _this.$anchors.focus();
+          }
+        });
+      });
+    }
+
+    /**
+     * Adds an event handler to the body to close any dropdowns on a click.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_addBodyHandler',
+    value: function _addBodyHandler() {
+      var $body = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document.body).not(this.$element),
+          _this = this;
+      $body.off('click.zf.dropdown').on('click.zf.dropdown', function (e) {
+        if (_this.$anchors.is(e.target) || _this.$anchors.find(e.target).length) {
+          return;
+        }
+        if (_this.$element.find(e.target).length) {
+          return;
+        }
+        _this.close();
+        $body.off('click.zf.dropdown');
+      });
+    }
+
+    /**
+     * Opens the dropdown pane, and fires a bubbling event to close other dropdowns.
+     * @function
+     * @fires Dropdown#closeme
+     * @fires Dropdown#show
+     */
+
+  }, {
+    key: 'open',
+    value: function open() {
+      // var _this = this;
+      /**
+       * Fires to close other open dropdowns, typically when dropdown is opening
+       * @event Dropdown#closeme
+       */
+      this.$element.trigger('closeme.zf.dropdown', this.$element.attr('id'));
+      this.$anchors.addClass('hover').attr({ 'aria-expanded': true });
+      // this.$element/*.show()*/;
+
+      this.$element.addClass('is-opening');
+      this._setPosition();
+      this.$element.removeClass('is-opening').addClass('is-open').attr({ 'aria-hidden': false });
+
+      if (this.options.autoFocus) {
+        var $focusable = __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].findFocusable(this.$element);
+        if ($focusable.length) {
+          $focusable.eq(0).focus();
+        }
+      }
+
+      if (this.options.closeOnClick) {
+        this._addBodyHandler();
+      }
+
+      if (this.options.trapFocus) {
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].trapFocus(this.$element);
+      }
+
+      /**
+       * Fires once the dropdown is visible.
+       * @event Dropdown#show
+       */
+      this.$element.trigger('show.zf.dropdown', [this.$element]);
+    }
+
+    /**
+     * Closes the open dropdown pane.
+     * @function
+     * @fires Dropdown#hide
+     */
+
+  }, {
+    key: 'close',
+    value: function close() {
+      if (!this.$element.hasClass('is-open')) {
+        return false;
+      }
+      this.$element.removeClass('is-open').attr({ 'aria-hidden': true });
+
+      this.$anchors.removeClass('hover').attr('aria-expanded', false);
+
+      /**
+       * Fires once the dropdown is no longer visible.
+       * @event Dropdown#hide
+       */
+      this.$element.trigger('hide.zf.dropdown', [this.$element]);
+
+      if (this.options.trapFocus) {
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].releaseFocus(this.$element);
+      }
+    }
+
+    /**
+     * Toggles the dropdown pane's visibility.
+     * @function
+     */
+
+  }, {
+    key: 'toggle',
+    value: function toggle() {
+      if (this.$element.hasClass('is-open')) {
+        if (this.$anchors.data('hover')) return;
+        this.close();
+      } else {
+        this.open();
+      }
+    }
+
+    /**
+     * Destroys the dropdown.
+     * @function
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.$element.off('.zf.trigger').hide();
+      this.$anchors.off('.zf.dropdown');
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document.body).off('click.zf.dropdown');
+    }
+  }]);
+
+  return Dropdown;
+}(__WEBPACK_IMPORTED_MODULE_3__foundation_positionable__["a" /* Positionable */]);
+
+Dropdown.defaults = {
+  /**
+   * Class that designates bounding container of Dropdown (default: window)
+   * @option
+   * @type {?string}
+   * @default null
+   */
+  parentClass: null,
+  /**
+   * Amount of time to delay opening a submenu on hover event.
+   * @option
+   * @type {number}
+   * @default 250
+   */
+  hoverDelay: 250,
+  /**
+   * Allow submenus to open on hover events
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  hover: false,
+  /**
+   * Don't close dropdown when hovering over dropdown pane
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  hoverPane: false,
+  /**
+   * Number of pixels between the dropdown pane and the triggering element on open.
+   * @option
+   * @type {number}
+   * @default 0
+   */
+  vOffset: 0,
+  /**
+   * Number of pixels between the dropdown pane and the triggering element on open.
+   * @option
+   * @type {number}
+   * @default 0
+   */
+  hOffset: 0,
+  /**
+   * DEPRECATED: Class applied to adjust open position.
+   * @option
+   * @type {string}
+   * @default ''
+   */
+  positionClass: '',
+
+  /**
+   * Position of dropdown. Can be left, right, bottom, top, or auto.
+   * @option
+   * @type {string}
+   * @default 'auto'
+   */
+  position: 'auto',
+  /**
+   * Alignment of dropdown relative to anchor. Can be left, right, bottom, top, center, or auto.
+   * @option
+   * @type {string}
+   * @default 'auto'
+   */
+  alignment: 'auto',
+  /**
+   * Allow overlap of container/window. If false, dropdown will first try to position as defined by data-position and data-alignment, but reposition if it would cause an overflow.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  allowOverlap: false,
+  /**
+   * Allow overlap of only the bottom of the container. This is the most common
+   * behavior for dropdowns, allowing the dropdown to extend the bottom of the
+   * screen but not otherwise influence or break out of the container.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  allowBottomOverlap: true,
+  /**
+   * Allow the plugin to trap focus to the dropdown pane if opened with keyboard commands.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  trapFocus: false,
+  /**
+   * Allow the plugin to set focus to the first focusable element within the pane, regardless of method of opening.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  autoFocus: false,
+  /**
+   * Allows a click on the body to close the dropdown.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  closeOnClick: false
+};
+
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Equalizer; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_imageLoader__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+/**
+ * Equalizer module.
+ * @module foundation.equalizer
+ * @requires foundation.util.mediaQuery
+ * @requires foundation.util.imageLoader if equalizer contains images
+ */
+
+var Equalizer = function (_Plugin) {
+  _inherits(Equalizer, _Plugin);
+
+  function Equalizer() {
+    _classCallCheck(this, Equalizer);
+
+    return _possibleConstructorReturn(this, (Equalizer.__proto__ || Object.getPrototypeOf(Equalizer)).apply(this, arguments));
+  }
+
+  _createClass(Equalizer, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of Equalizer.
+     * @class
+     * @name Equalizer
+     * @fires Equalizer#init
+     * @param {Object} element - jQuery object to add the trigger to.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Equalizer.defaults, this.$element.data(), options);
+      this.className = 'Equalizer'; // ie9 back compat
+
+      this._init();
+    }
+
+    /**
+     * Initializes the Equalizer plugin and calls functions to get equalizer functioning on load.
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      var eqId = this.$element.attr('data-equalizer') || '';
+      var $watched = this.$element.find('[data-equalizer-watch="' + eqId + '"]');
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__["a" /* MediaQuery */]._init();
+
+      this.$watched = $watched.length ? $watched : this.$element.find('[data-equalizer-watch]');
+      this.$element.attr('data-resize', eqId || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'eq'));
+      this.$element.attr('data-mutate', eqId || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'eq'));
+
+      this.hasNested = this.$element.find('[data-equalizer]').length > 0;
+      this.isNested = this.$element.parentsUntil(document.body, '[data-equalizer]').length > 0;
+      this.isOn = false;
+      this._bindHandler = {
+        onResizeMeBound: this._onResizeMe.bind(this),
+        onPostEqualizedBound: this._onPostEqualized.bind(this)
+      };
+
+      var imgs = this.$element.find('img');
+      var tooSmall;
+      if (this.options.equalizeOn) {
+        tooSmall = this._checkMQ();
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).on('changed.zf.mediaquery', this._checkMQ.bind(this));
+      } else {
+        this._events();
+      }
+      if (tooSmall !== undefined && tooSmall === false || tooSmall === undefined) {
+        if (imgs.length) {
+          __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__foundation_util_imageLoader__["a" /* onImagesLoaded */])(imgs, this._reflow.bind(this));
+        } else {
+          this._reflow();
+        }
+      }
+    }
+
+    /**
+     * Removes event listeners if the breakpoint is too small.
+     * @private
+     */
+
+  }, {
+    key: '_pauseEvents',
+    value: function _pauseEvents() {
+      this.isOn = false;
+      this.$element.off({
+        '.zf.equalizer': this._bindHandler.onPostEqualizedBound,
+        'resizeme.zf.trigger': this._bindHandler.onResizeMeBound,
+        'mutateme.zf.trigger': this._bindHandler.onResizeMeBound
+      });
+    }
+
+    /**
+     * function to handle $elements resizeme.zf.trigger, with bound this on _bindHandler.onResizeMeBound
+     * @private
+     */
+
+  }, {
+    key: '_onResizeMe',
+    value: function _onResizeMe(e) {
+      this._reflow();
+    }
+
+    /**
+     * function to handle $elements postequalized.zf.equalizer, with bound this on _bindHandler.onPostEqualizedBound
+     * @private
+     */
+
+  }, {
+    key: '_onPostEqualized',
+    value: function _onPostEqualized(e) {
+      if (e.target !== this.$element[0]) {
+        this._reflow();
+      }
+    }
+
+    /**
+     * Initializes events for Equalizer.
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this;
+      this._pauseEvents();
+      if (this.hasNested) {
+        this.$element.on('postequalized.zf.equalizer', this._bindHandler.onPostEqualizedBound);
+      } else {
+        this.$element.on('resizeme.zf.trigger', this._bindHandler.onResizeMeBound);
+        this.$element.on('mutateme.zf.trigger', this._bindHandler.onResizeMeBound);
+      }
+      this.isOn = true;
+    }
+
+    /**
+     * Checks the current breakpoint to the minimum required size.
+     * @private
+     */
+
+  }, {
+    key: '_checkMQ',
+    value: function _checkMQ() {
+      var tooSmall = !__WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__["a" /* MediaQuery */].is(this.options.equalizeOn);
+      if (tooSmall) {
+        if (this.isOn) {
+          this._pauseEvents();
+          this.$watched.css('height', 'auto');
+        }
+      } else {
+        if (!this.isOn) {
+          this._events();
+        }
+      }
+      return tooSmall;
+    }
+
+    /**
+     * A noop version for the plugin
+     * @private
+     */
+
+  }, {
+    key: '_killswitch',
+    value: function _killswitch() {
+      return;
+    }
+
+    /**
+     * Calls necessary functions to update Equalizer upon DOM change
+     * @private
+     */
+
+  }, {
+    key: '_reflow',
+    value: function _reflow() {
+      if (!this.options.equalizeOnStack) {
+        if (this._isStacked()) {
+          this.$watched.css('height', 'auto');
+          return false;
+        }
+      }
+      if (this.options.equalizeByRow) {
+        this.getHeightsByRow(this.applyHeightByRow.bind(this));
+      } else {
+        this.getHeights(this.applyHeight.bind(this));
+      }
+    }
+
+    /**
+     * Manually determines if the first 2 elements are *NOT* stacked.
+     * @private
+     */
+
+  }, {
+    key: '_isStacked',
+    value: function _isStacked() {
+      if (!this.$watched[0] || !this.$watched[1]) {
+        return true;
+      }
+      return this.$watched[0].getBoundingClientRect().top !== this.$watched[1].getBoundingClientRect().top;
+    }
+
+    /**
+     * Finds the outer heights of children contained within an Equalizer parent and returns them in an array
+     * @param {Function} cb - A non-optional callback to return the heights array to.
+     * @returns {Array} heights - An array of heights of children within Equalizer container
+     */
+
+  }, {
+    key: 'getHeights',
+    value: function getHeights(cb) {
+      var heights = [];
+      for (var i = 0, len = this.$watched.length; i < len; i++) {
+        this.$watched[i].style.height = 'auto';
+        heights.push(this.$watched[i].offsetHeight);
+      }
+      cb(heights);
+    }
+
+    /**
+     * Finds the outer heights of children contained within an Equalizer parent and returns them in an array
+     * @param {Function} cb - A non-optional callback to return the heights array to.
+     * @returns {Array} groups - An array of heights of children within Equalizer container grouped by row with element,height and max as last child
+     */
+
+  }, {
+    key: 'getHeightsByRow',
+    value: function getHeightsByRow(cb) {
+      var lastElTopOffset = this.$watched.length ? this.$watched.first().offset().top : 0,
+          groups = [],
+          group = 0;
+      //group by Row
+      groups[group] = [];
+      for (var i = 0, len = this.$watched.length; i < len; i++) {
+        this.$watched[i].style.height = 'auto';
+        //maybe could use this.$watched[i].offsetTop
+        var elOffsetTop = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this.$watched[i]).offset().top;
+        if (elOffsetTop != lastElTopOffset) {
+          group++;
+          groups[group] = [];
+          lastElTopOffset = elOffsetTop;
+        }
+        groups[group].push([this.$watched[i], this.$watched[i].offsetHeight]);
+      }
+
+      for (var j = 0, ln = groups.length; j < ln; j++) {
+        var heights = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(groups[j]).map(function () {
+          return this[1];
+        }).get();
+        var max = Math.max.apply(null, heights);
+        groups[j].push(max);
+      }
+      cb(groups);
+    }
+
+    /**
+     * Changes the CSS height property of each child in an Equalizer parent to match the tallest
+     * @param {array} heights - An array of heights of children within Equalizer container
+     * @fires Equalizer#preequalized
+     * @fires Equalizer#postequalized
+     */
+
+  }, {
+    key: 'applyHeight',
+    value: function applyHeight(heights) {
+      var max = Math.max.apply(null, heights);
+      /**
+       * Fires before the heights are applied
+       * @event Equalizer#preequalized
+       */
+      this.$element.trigger('preequalized.zf.equalizer');
+
+      this.$watched.css('height', max);
+
+      /**
+       * Fires when the heights have been applied
+       * @event Equalizer#postequalized
+       */
+      this.$element.trigger('postequalized.zf.equalizer');
+    }
+
+    /**
+     * Changes the CSS height property of each child in an Equalizer parent to match the tallest by row
+     * @param {array} groups - An array of heights of children within Equalizer container grouped by row with element,height and max as last child
+     * @fires Equalizer#preequalized
+     * @fires Equalizer#preequalizedrow
+     * @fires Equalizer#postequalizedrow
+     * @fires Equalizer#postequalized
+     */
+
+  }, {
+    key: 'applyHeightByRow',
+    value: function applyHeightByRow(groups) {
+      /**
+       * Fires before the heights are applied
+       */
+      this.$element.trigger('preequalized.zf.equalizer');
+      for (var i = 0, len = groups.length; i < len; i++) {
+        var groupsILength = groups[i].length,
+            max = groups[i][groupsILength - 1];
+        if (groupsILength <= 2) {
+          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(groups[i][0][0]).css({ 'height': 'auto' });
+          continue;
+        }
+        /**
+          * Fires before the heights per row are applied
+          * @event Equalizer#preequalizedrow
+          */
+        this.$element.trigger('preequalizedrow.zf.equalizer');
+        for (var j = 0, lenJ = groupsILength - 1; j < lenJ; j++) {
+          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(groups[i][j][0]).css({ 'height': max });
+        }
+        /**
+          * Fires when the heights per row have been applied
+          * @event Equalizer#postequalizedrow
+          */
+        this.$element.trigger('postequalizedrow.zf.equalizer');
+      }
+      /**
+       * Fires when the heights have been applied
+       */
+      this.$element.trigger('postequalized.zf.equalizer');
+    }
+
+    /**
+     * Destroys an instance of Equalizer.
+     * @function
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this._pauseEvents();
+      this.$watched.css('height', 'auto');
+    }
+  }]);
+
+  return Equalizer;
+}(__WEBPACK_IMPORTED_MODULE_4__foundation_plugin__["a" /* Plugin */]);
+
+/**
+ * Default settings for plugin
+ */
+
+
+Equalizer.defaults = {
+  /**
+   * Enable height equalization when stacked on smaller screens.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  equalizeOnStack: false,
+  /**
+   * Enable height equalization row by row.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  equalizeByRow: false,
+  /**
+   * String representing the minimum breakpoint size the plugin should equalize heights on.
+   * @option
+   * @type {string}
+   * @default ''
+   */
+  equalizeOn: ''
+};
+
+
+
+/***/ }),
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1962,7 +5256,1551 @@ Interchange.SPECIAL_QUERIES = {
 
 
 /***/ }),
-/* 11 */
+/* 19 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Magellan; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_plugin__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_smoothScroll__ = __webpack_require__(12);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+/**
+ * Magellan module.
+ * @module foundation.magellan
+ * @requires foundation.smoothScroll
+ */
+
+var Magellan = function (_Plugin) {
+  _inherits(Magellan, _Plugin);
+
+  function Magellan() {
+    _classCallCheck(this, Magellan);
+
+    return _possibleConstructorReturn(this, (Magellan.__proto__ || Object.getPrototypeOf(Magellan)).apply(this, arguments));
+  }
+
+  _createClass(Magellan, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of Magellan.
+     * @class
+     * @name Magellan
+     * @fires Magellan#init
+     * @param {Object} element - jQuery object to add the trigger to.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Magellan.defaults, this.$element.data(), options);
+      this.className = 'Magellan'; // ie9 back compat
+
+      this._init();
+      this.calcPoints();
+    }
+
+    /**
+     * Initializes the Magellan plugin and calls functions to get equalizer functioning on load.
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      var id = this.$element[0].id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__foundation_util_core__["a" /* GetYoDigits */])(6, 'magellan');
+      var _this = this;
+      this.$targets = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('[data-magellan-target]');
+      this.$links = this.$element.find('a');
+      this.$element.attr({
+        'data-resize': id,
+        'data-scroll': id,
+        'id': id
+      });
+      this.$active = __WEBPACK_IMPORTED_MODULE_0_jquery___default()();
+      this.scrollPos = parseInt(window.pageYOffset, 10);
+
+      this._events();
+    }
+
+    /**
+     * Calculates an array of pixel values that are the demarcation lines between locations on the page.
+     * Can be invoked if new elements are added or the size of a location changes.
+     * @function
+     */
+
+  }, {
+    key: 'calcPoints',
+    value: function calcPoints() {
+      var _this = this,
+          body = document.body,
+          html = document.documentElement;
+
+      this.points = [];
+      this.winHeight = Math.round(Math.max(window.innerHeight, html.clientHeight));
+      this.docHeight = Math.round(Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight));
+
+      this.$targets.each(function () {
+        var $tar = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
+            pt = Math.round($tar.offset().top - _this.options.threshold);
+        $tar.targetPoint = pt;
+        _this.points.push(pt);
+      });
+    }
+
+    /**
+     * Initializes events for Magellan.
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this,
+          $body = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('html, body'),
+          opts = {
+        duration: _this.options.animationDuration,
+        easing: _this.options.animationEasing
+      };
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).one('load', function () {
+        if (_this.options.deepLinking) {
+          if (location.hash) {
+            _this.scrollToLoc(location.hash);
+          }
+        }
+        _this.calcPoints();
+        _this._updateActive();
+      });
+
+      this.$element.on({
+        'resizeme.zf.trigger': this.reflow.bind(this),
+        'scrollme.zf.trigger': this._updateActive.bind(this)
+      }).on('click.zf.magellan', 'a[href^="#"]', function (e) {
+        e.preventDefault();
+        var arrival = this.getAttribute('href');
+        _this.scrollToLoc(arrival);
+      });
+
+      this._deepLinkScroll = function (e) {
+        if (_this.options.deepLinking) {
+          _this.scrollToLoc(window.location.hash);
+        }
+      };
+
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).on('popstate', this._deepLinkScroll);
+    }
+
+    /**
+     * Function to scroll to a given location on the page.
+     * @param {String} loc - a properly formatted jQuery id selector. Example: '#foo'
+     * @function
+     */
+
+  }, {
+    key: 'scrollToLoc',
+    value: function scrollToLoc(loc) {
+      this._inTransition = true;
+      var _this = this;
+
+      var options = {
+        animationEasing: this.options.animationEasing,
+        animationDuration: this.options.animationDuration,
+        threshold: this.options.threshold,
+        offset: this.options.offset
+      };
+
+      __WEBPACK_IMPORTED_MODULE_3__foundation_smoothScroll__["a" /* SmoothScroll */].scrollToLoc(loc, options, function () {
+        _this._inTransition = false;
+        _this._updateActive();
+      });
+    }
+
+    /**
+     * Calls necessary functions to update Magellan upon DOM change
+     * @function
+     */
+
+  }, {
+    key: 'reflow',
+    value: function reflow() {
+      this.calcPoints();
+      this._updateActive();
+    }
+
+    /**
+     * Updates the visibility of an active location link, and updates the url hash for the page, if deepLinking enabled.
+     * @private
+     * @function
+     * @fires Magellan#update
+     */
+
+  }, {
+    key: '_updateActive',
+    value: function _updateActive() /*evt, elem, scrollPos*/{
+      if (this._inTransition) {
+        return;
+      }
+      var winPos = /*scrollPos ||*/parseInt(window.pageYOffset, 10),
+          curIdx;
+
+      if (winPos + this.winHeight === this.docHeight) {
+        curIdx = this.points.length - 1;
+      } else if (winPos < this.points[0]) {
+        curIdx = undefined;
+      } else {
+        var isDown = this.scrollPos < winPos,
+            _this = this,
+            curVisible = this.points.filter(function (p, i) {
+          return isDown ? p - _this.options.offset <= winPos : p - _this.options.offset - _this.options.threshold <= winPos;
+        });
+        curIdx = curVisible.length ? curVisible.length - 1 : 0;
+      }
+
+      this.$active.removeClass(this.options.activeClass);
+      this.$active = this.$links.filter('[href="#' + this.$targets.eq(curIdx).data('magellan-target') + '"]').addClass(this.options.activeClass);
+
+      if (this.options.deepLinking) {
+        var hash = "";
+        if (curIdx != undefined) {
+          hash = this.$active[0].getAttribute('href');
+        }
+        if (hash !== window.location.hash) {
+          if (window.history.pushState) {
+            window.history.pushState(null, null, hash);
+          } else {
+            window.location.hash = hash;
+          }
+        }
+      }
+
+      this.scrollPos = winPos;
+      /**
+       * Fires when magellan is finished updating to the new active element.
+       * @event Magellan#update
+       */
+      this.$element.trigger('update.zf.magellan', [this.$active]);
+    }
+
+    /**
+     * Destroys an instance of Magellan and resets the url of the window.
+     * @function
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.$element.off('.zf.trigger .zf.magellan').find('.' + this.options.activeClass).removeClass(this.options.activeClass);
+
+      if (this.options.deepLinking) {
+        var hash = this.$active[0].getAttribute('href');
+        window.location.hash.replace(hash, '');
+      }
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).off('popstate', this._deepLinkScroll);
+    }
+  }]);
+
+  return Magellan;
+}(__WEBPACK_IMPORTED_MODULE_2__foundation_plugin__["a" /* Plugin */]);
+
+/**
+ * Default settings for plugin
+ */
+
+
+Magellan.defaults = {
+  /**
+   * Amount of time, in ms, the animated scrolling should take between locations.
+   * @option
+   * @type {number}
+   * @default 500
+   */
+  animationDuration: 500,
+  /**
+   * Animation style to use when scrolling between locations. Can be `'swing'` or `'linear'`.
+   * @option
+   * @type {string}
+   * @default 'linear'
+   * @see {@link https://api.jquery.com/animate|Jquery animate}
+   */
+  animationEasing: 'linear',
+  /**
+   * Number of pixels to use as a marker for location changes.
+   * @option
+   * @type {number}
+   * @default 50
+   */
+  threshold: 50,
+  /**
+   * Class applied to the active locations link on the magellan container.
+   * @option
+   * @type {string}
+   * @default 'is-active'
+   */
+  activeClass: 'is-active',
+  /**
+   * Allows the script to manipulate the url of the current page, and if supported, alter the history.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  deepLinking: false,
+  /**
+   * Number of pixels to offset the scroll of the page on item click if using a sticky nav bar.
+   * @option
+   * @type {number}
+   * @default 0
+   */
+  offset: 0
+};
+
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return OffCanvas; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_mediaQuery__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_plugin__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_util_triggers__ = __webpack_require__(5);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+
+
+/**
+ * OffCanvas module.
+ * @module foundation.offcanvas
+ * @requires foundation.util.keyboard
+ * @requires foundation.util.mediaQuery
+ * @requires foundation.util.triggers
+ */
+
+var OffCanvas = function (_Plugin) {
+  _inherits(OffCanvas, _Plugin);
+
+  function OffCanvas() {
+    _classCallCheck(this, OffCanvas);
+
+    return _possibleConstructorReturn(this, (OffCanvas.__proto__ || Object.getPrototypeOf(OffCanvas)).apply(this, arguments));
+  }
+
+  _createClass(OffCanvas, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of an off-canvas wrapper.
+     * @class
+     * @name OffCanvas
+     * @fires OffCanvas#init
+     * @param {Object} element - jQuery object to initialize.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      var _this3 = this;
+
+      this.className = 'OffCanvas'; // ie9 back compat
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, OffCanvas.defaults, this.$element.data(), options);
+      this.contentClasses = { base: [], reveal: [] };
+      this.$lastTrigger = __WEBPACK_IMPORTED_MODULE_0_jquery___default()();
+      this.$triggers = __WEBPACK_IMPORTED_MODULE_0_jquery___default()();
+      this.position = 'left';
+      this.$content = __WEBPACK_IMPORTED_MODULE_0_jquery___default()();
+      this.nested = !!this.options.nested;
+
+      // Defines the CSS transition/position classes of the off-canvas content container.
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(['push', 'overlap']).each(function (index, val) {
+        _this3.contentClasses.base.push('has-transition-' + val);
+      });
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(['left', 'right', 'top', 'bottom']).each(function (index, val) {
+        _this3.contentClasses.base.push('has-position-' + val);
+        _this3.contentClasses.reveal.push('has-reveal-' + val);
+      });
+
+      // Triggers init is idempotent, just need to make sure it is initialized
+      __WEBPACK_IMPORTED_MODULE_5__foundation_util_triggers__["a" /* Triggers */].init(__WEBPACK_IMPORTED_MODULE_0_jquery___default.a);
+      __WEBPACK_IMPORTED_MODULE_2__foundation_util_mediaQuery__["a" /* MediaQuery */]._init();
+
+      this._init();
+      this._events();
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('OffCanvas', {
+        'ESCAPE': 'close'
+      });
+    }
+
+    /**
+     * Initializes the off-canvas wrapper by adding the exit overlay (if needed).
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      var id = this.$element.attr('id');
+
+      this.$element.attr('aria-hidden', 'true');
+
+      // Find off-canvas content, either by ID (if specified), by siblings or by closest selector (fallback)
+      if (this.options.contentId) {
+        this.$content = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('#' + this.options.contentId);
+      } else if (this.$element.siblings('[data-off-canvas-content]').length) {
+        this.$content = this.$element.siblings('[data-off-canvas-content]').first();
+      } else {
+        this.$content = this.$element.closest('[data-off-canvas-content]').first();
+      }
+
+      if (!this.options.contentId) {
+        // Assume that the off-canvas element is nested if it isn't a sibling of the content
+        this.nested = this.$element.siblings('[data-off-canvas-content]').length === 0;
+      } else if (this.options.contentId && this.options.nested === null) {
+        // Warning if using content ID without setting the nested option
+        // Once the element is nested it is required to work properly in this case
+        console.warn('Remember to use the nested option if using the content ID option!');
+      }
+
+      if (this.nested === true) {
+        // Force transition overlap if nested
+        this.options.transition = 'overlap';
+        // Remove appropriate classes if already assigned in markup
+        this.$element.removeClass('is-transition-push');
+      }
+
+      this.$element.addClass('is-transition-' + this.options.transition + ' is-closed');
+
+      // Find triggers that affect this element and add aria-expanded to them
+      this.$triggers = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document).find('[data-open="' + id + '"], [data-close="' + id + '"], [data-toggle="' + id + '"]').attr('aria-expanded', 'false').attr('aria-controls', id);
+
+      // Get position by checking for related CSS class
+      this.position = this.$element.is('.position-left, .position-top, .position-right, .position-bottom') ? this.$element.attr('class').match(/position\-(left|top|right|bottom)/)[1] : this.position;
+
+      // Add an overlay over the content if necessary
+      if (this.options.contentOverlay === true) {
+        var overlay = document.createElement('div');
+        var overlayPosition = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this.$element).css("position") === 'fixed' ? 'is-overlay-fixed' : 'is-overlay-absolute';
+        overlay.setAttribute('class', 'js-off-canvas-overlay ' + overlayPosition);
+        this.$overlay = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(overlay);
+        if (overlayPosition === 'is-overlay-fixed') {
+          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this.$overlay).insertAfter(this.$element);
+        } else {
+          this.$content.append(this.$overlay);
+        }
+      }
+
+      this.options.isRevealed = this.options.isRevealed || new RegExp(this.options.revealClass, 'g').test(this.$element[0].className);
+
+      if (this.options.isRevealed === true) {
+        this.options.revealOn = this.options.revealOn || this.$element[0].className.match(/(reveal-for-medium|reveal-for-large)/g)[0].split('-')[2];
+        this._setMQChecker();
+      }
+
+      if (this.options.transitionTime) {
+        this.$element.css('transition-duration', this.options.transitionTime);
+      }
+
+      // Initally remove all transition/position CSS classes from off-canvas content container.
+      this._removeContentClasses();
+    }
+
+    /**
+     * Adds event handlers to the off-canvas wrapper and the exit overlay.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      this.$element.off('.zf.trigger .zf.offcanvas').on({
+        'open.zf.trigger': this.open.bind(this),
+        'close.zf.trigger': this.close.bind(this),
+        'toggle.zf.trigger': this.toggle.bind(this),
+        'keydown.zf.offcanvas': this._handleKeyboard.bind(this)
+      });
+
+      if (this.options.closeOnClick === true) {
+        var $target = this.options.contentOverlay ? this.$overlay : this.$content;
+        $target.on({ 'click.zf.offcanvas': this.close.bind(this) });
+      }
+    }
+
+    /**
+     * Applies event listener for elements that will reveal at certain breakpoints.
+     * @private
+     */
+
+  }, {
+    key: '_setMQChecker',
+    value: function _setMQChecker() {
+      var _this = this;
+
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).on('changed.zf.mediaquery', function () {
+        if (__WEBPACK_IMPORTED_MODULE_2__foundation_util_mediaQuery__["a" /* MediaQuery */].atLeast(_this.options.revealOn)) {
+          _this.reveal(true);
+        } else {
+          _this.reveal(false);
+        }
+      }).one('load.zf.offcanvas', function () {
+        if (__WEBPACK_IMPORTED_MODULE_2__foundation_util_mediaQuery__["a" /* MediaQuery */].atLeast(_this.options.revealOn)) {
+          _this.reveal(true);
+        }
+      });
+    }
+
+    /**
+     * Removes the CSS transition/position classes of the off-canvas content container.
+     * Removing the classes is important when another off-canvas gets opened that uses the same content container.
+     * @param {Boolean} hasReveal - true if related off-canvas element is revealed.
+     * @private
+     */
+
+  }, {
+    key: '_removeContentClasses',
+    value: function _removeContentClasses(hasReveal) {
+      if (typeof hasReveal !== 'boolean') {
+        this.$content.removeClass(this.contentClasses.base.join(' '));
+      } else if (hasReveal === false) {
+        this.$content.removeClass('has-reveal-' + this.position);
+      }
+    }
+
+    /**
+     * Adds the CSS transition/position classes of the off-canvas content container, based on the opening off-canvas element.
+     * Beforehand any transition/position class gets removed.
+     * @param {Boolean} hasReveal - true if related off-canvas element is revealed.
+     * @private
+     */
+
+  }, {
+    key: '_addContentClasses',
+    value: function _addContentClasses(hasReveal) {
+      this._removeContentClasses(hasReveal);
+      if (typeof hasReveal !== 'boolean') {
+        this.$content.addClass('has-transition-' + this.options.transition + ' has-position-' + this.position);
+      } else if (hasReveal === true) {
+        this.$content.addClass('has-reveal-' + this.position);
+      }
+    }
+
+    /**
+     * Handles the revealing/hiding the off-canvas at breakpoints, not the same as open.
+     * @param {Boolean} isRevealed - true if element should be revealed.
+     * @function
+     */
+
+  }, {
+    key: 'reveal',
+    value: function reveal(isRevealed) {
+      if (isRevealed) {
+        this.close();
+        this.isRevealed = true;
+        this.$element.attr('aria-hidden', 'false');
+        this.$element.off('open.zf.trigger toggle.zf.trigger');
+        this.$element.removeClass('is-closed');
+      } else {
+        this.isRevealed = false;
+        this.$element.attr('aria-hidden', 'true');
+        this.$element.off('open.zf.trigger toggle.zf.trigger').on({
+          'open.zf.trigger': this.open.bind(this),
+          'toggle.zf.trigger': this.toggle.bind(this)
+        });
+        this.$element.addClass('is-closed');
+      }
+      this._addContentClasses(isRevealed);
+    }
+
+    /**
+     * Stops scrolling of the body when offcanvas is open on mobile Safari and other troublesome browsers.
+     * @private
+     */
+
+  }, {
+    key: '_stopScrolling',
+    value: function _stopScrolling(event) {
+      return false;
+    }
+
+    // Taken and adapted from http://stackoverflow.com/questions/16889447/prevent-full-page-scrolling-ios
+    // Only really works for y, not sure how to extend to x or if we need to.
+
+  }, {
+    key: '_recordScrollable',
+    value: function _recordScrollable(event) {
+      var elem = this; // called from event handler context with this as elem
+
+      // If the element is scrollable (content overflows), then...
+      if (elem.scrollHeight !== elem.clientHeight) {
+        // If we're at the top, scroll down one pixel to allow scrolling up
+        if (elem.scrollTop === 0) {
+          elem.scrollTop = 1;
+        }
+        // If we're at the bottom, scroll up one pixel to allow scrolling down
+        if (elem.scrollTop === elem.scrollHeight - elem.clientHeight) {
+          elem.scrollTop = elem.scrollHeight - elem.clientHeight - 1;
+        }
+      }
+      elem.allowUp = elem.scrollTop > 0;
+      elem.allowDown = elem.scrollTop < elem.scrollHeight - elem.clientHeight;
+      elem.lastY = event.originalEvent.pageY;
+    }
+  }, {
+    key: '_stopScrollPropagation',
+    value: function _stopScrollPropagation(event) {
+      var elem = this; // called from event handler context with this as elem
+      var up = event.pageY < elem.lastY;
+      var down = !up;
+      elem.lastY = event.pageY;
+
+      if (up && elem.allowUp || down && elem.allowDown) {
+        event.stopPropagation();
+      } else {
+        event.preventDefault();
+      }
+    }
+
+    /**
+     * Opens the off-canvas menu.
+     * @function
+     * @param {Object} event - Event object passed from listener.
+     * @param {jQuery} trigger - element that triggered the off-canvas to open.
+     * @fires OffCanvas#opened
+     */
+
+  }, {
+    key: 'open',
+    value: function open(event, trigger) {
+      if (this.$element.hasClass('is-open') || this.isRevealed) {
+        return;
+      }
+      var _this = this;
+
+      if (trigger) {
+        this.$lastTrigger = trigger;
+      }
+
+      if (this.options.forceTo === 'top') {
+        window.scrollTo(0, 0);
+      } else if (this.options.forceTo === 'bottom') {
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+
+      if (this.options.transitionTime && this.options.transition !== 'overlap') {
+        this.$element.siblings('[data-off-canvas-content]').css('transition-duration', this.options.transitionTime);
+      } else {
+        this.$element.siblings('[data-off-canvas-content]').css('transition-duration', '');
+      }
+
+      /**
+       * Fires when the off-canvas menu opens.
+       * @event OffCanvas#opened
+       */
+      this.$element.addClass('is-open').removeClass('is-closed');
+
+      this.$triggers.attr('aria-expanded', 'true');
+      this.$element.attr('aria-hidden', 'false').trigger('opened.zf.offcanvas');
+
+      this.$content.addClass('is-open-' + this.position);
+
+      // If `contentScroll` is set to false, add class and disable scrolling on touch devices.
+      if (this.options.contentScroll === false) {
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()('body').addClass('is-off-canvas-open').on('touchmove', this._stopScrolling);
+        this.$element.on('touchstart', this._recordScrollable);
+        this.$element.on('touchmove', this._stopScrollPropagation);
+      }
+
+      if (this.options.contentOverlay === true) {
+        this.$overlay.addClass('is-visible');
+      }
+
+      if (this.options.closeOnClick === true && this.options.contentOverlay === true) {
+        this.$overlay.addClass('is-closable');
+      }
+
+      if (this.options.autoFocus === true) {
+        this.$element.one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])(this.$element), function () {
+          if (!_this.$element.hasClass('is-open')) {
+            return; // exit if prematurely closed
+          }
+          var canvasFocus = _this.$element.find('[data-autofocus]');
+          if (canvasFocus.length) {
+            canvasFocus.eq(0).focus();
+          } else {
+            _this.$element.find('a, button').eq(0).focus();
+          }
+        });
+      }
+
+      if (this.options.trapFocus === true) {
+        this.$content.attr('tabindex', '-1');
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].trapFocus(this.$element);
+      }
+
+      this._addContentClasses();
+    }
+
+    /**
+     * Closes the off-canvas menu.
+     * @function
+     * @param {Function} cb - optional cb to fire after closure.
+     * @fires OffCanvas#closed
+     */
+
+  }, {
+    key: 'close',
+    value: function close(cb) {
+      if (!this.$element.hasClass('is-open') || this.isRevealed) {
+        return;
+      }
+
+      var _this = this;
+
+      this.$element.removeClass('is-open');
+
+      this.$element.attr('aria-hidden', 'true')
+      /**
+       * Fires when the off-canvas menu opens.
+       * @event OffCanvas#closed
+       */
+      .trigger('closed.zf.offcanvas');
+
+      this.$content.removeClass('is-open-left is-open-top is-open-right is-open-bottom');
+
+      // If `contentScroll` is set to false, remove class and re-enable scrolling on touch devices.
+      if (this.options.contentScroll === false) {
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()('body').removeClass('is-off-canvas-open').off('touchmove', this._stopScrolling);
+        this.$element.off('touchstart', this._recordScrollable);
+        this.$element.off('touchmove', this._stopScrollPropagation);
+      }
+
+      if (this.options.contentOverlay === true) {
+        this.$overlay.removeClass('is-visible');
+      }
+
+      if (this.options.closeOnClick === true && this.options.contentOverlay === true) {
+        this.$overlay.removeClass('is-closable');
+      }
+
+      this.$triggers.attr('aria-expanded', 'false');
+
+      if (this.options.trapFocus === true) {
+        this.$content.removeAttr('tabindex');
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].releaseFocus(this.$element);
+      }
+
+      // Listen to transitionEnd and add class when done.
+      this.$element.one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])(this.$element), function (e) {
+        _this.$element.addClass('is-closed');
+        _this._removeContentClasses();
+      });
+    }
+
+    /**
+     * Toggles the off-canvas menu open or closed.
+     * @function
+     * @param {Object} event - Event object passed from listener.
+     * @param {jQuery} trigger - element that triggered the off-canvas to open.
+     */
+
+  }, {
+    key: 'toggle',
+    value: function toggle(event, trigger) {
+      if (this.$element.hasClass('is-open')) {
+        this.close(event, trigger);
+      } else {
+        this.open(event, trigger);
+      }
+    }
+
+    /**
+     * Handles keyboard input when detected. When the escape key is pressed, the off-canvas menu closes, and focus is restored to the element that opened the menu.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_handleKeyboard',
+    value: function _handleKeyboard(e) {
+      var _this4 = this;
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'OffCanvas', {
+        close: function () {
+          _this4.close();
+          _this4.$lastTrigger.focus();
+          return true;
+        },
+        handled: function () {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      });
+    }
+
+    /**
+     * Destroys the offcanvas plugin.
+     * @function
+     */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.close();
+      this.$element.off('.zf.trigger .zf.offcanvas');
+      this.$overlay.off('.zf.offcanvas');
+    }
+  }]);
+
+  return OffCanvas;
+}(__WEBPACK_IMPORTED_MODULE_4__foundation_plugin__["a" /* Plugin */]);
+
+OffCanvas.defaults = {
+  /**
+   * Allow the user to click outside of the menu to close it.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  closeOnClick: true,
+
+  /**
+   * Adds an overlay on top of `[data-off-canvas-content]`.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  contentOverlay: true,
+
+  /**
+   * Target an off-canvas content container by ID that may be placed anywhere. If null the closest content container will be taken.
+   * @option
+   * @type {?string}
+   * @default null
+   */
+  contentId: null,
+
+  /**
+   * Define the off-canvas element is nested in an off-canvas content. This is required when using the contentId option for a nested element.
+   * @option
+   * @type {boolean}
+   * @default null
+   */
+  nested: null,
+
+  /**
+   * Enable/disable scrolling of the main content when an off canvas panel is open.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  contentScroll: true,
+
+  /**
+   * Amount of time in ms the open and close transition requires. If none selected, pulls from body style.
+   * @option
+   * @type {number}
+   * @default null
+   */
+  transitionTime: null,
+
+  /**
+   * Type of transition for the offcanvas menu. Options are 'push', 'detached' or 'slide'.
+   * @option
+   * @type {string}
+   * @default push
+   */
+  transition: 'push',
+
+  /**
+   * Force the page to scroll to top or bottom on open.
+   * @option
+   * @type {?string}
+   * @default null
+   */
+  forceTo: null,
+
+  /**
+   * Allow the offcanvas to remain open for certain breakpoints.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  isRevealed: false,
+
+  /**
+   * Breakpoint at which to reveal. JS will use a RegExp to target standard classes, if changing classnames, pass your class with the `revealClass` option.
+   * @option
+   * @type {?string}
+   * @default null
+   */
+  revealOn: null,
+
+  /**
+   * Force focus to the offcanvas on open. If true, will focus the opening trigger on close.
+   * @option
+   * @type {boolean}
+   * @default true
+   */
+  autoFocus: true,
+
+  /**
+   * Class used to force an offcanvas to remain open. Foundation defaults for this are `reveal-for-large` & `reveal-for-medium`.
+   * @option
+   * @type {string}
+   * @default reveal-for-
+   * @todo improve the regex testing for this.
+   */
+  revealClass: 'reveal-for-',
+
+  /**
+   * Triggers optional focus trapping when opening an offcanvas. Sets tabindex of [data-off-canvas-content] to -1 for accessibility purposes.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  trapFocus: false
+};
+
+
+
+/***/ }),
+/* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Orbit; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_motion__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_timer__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_util_imageLoader__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_util_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__foundation_plugin__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__foundation_util_touch__ = __webpack_require__(29);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+
+
+
+/**
+ * Orbit module.
+ * @module foundation.orbit
+ * @requires foundation.util.keyboard
+ * @requires foundation.util.motion
+ * @requires foundation.util.timer
+ * @requires foundation.util.imageLoader
+ * @requires foundation.util.touch
+ */
+
+var Orbit = function (_Plugin) {
+  _inherits(Orbit, _Plugin);
+
+  function Orbit() {
+    _classCallCheck(this, Orbit);
+
+    return _possibleConstructorReturn(this, (Orbit.__proto__ || Object.getPrototypeOf(Orbit)).apply(this, arguments));
+  }
+
+  _createClass(Orbit, [{
+    key: '_setup',
+
+    /**
+    * Creates a new instance of an orbit carousel.
+    * @class
+    * @name Orbit
+    * @param {jQuery} element - jQuery object to make into an Orbit Carousel.
+    * @param {Object} options - Overrides to the default plugin settings.
+    */
+    value: function _setup(element, options) {
+      this.$element = element;
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Orbit.defaults, this.$element.data(), options);
+      this.className = 'Orbit'; // ie9 back compat
+
+      __WEBPACK_IMPORTED_MODULE_7__foundation_util_touch__["a" /* Touch */].init(__WEBPACK_IMPORTED_MODULE_0_jquery___default.a); // Touch init is idempotent, we just need to make sure it's initialied.
+
+      this._init();
+
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('Orbit', {
+        'ltr': {
+          'ARROW_RIGHT': 'next',
+          'ARROW_LEFT': 'previous'
+        },
+        'rtl': {
+          'ARROW_LEFT': 'next',
+          'ARROW_RIGHT': 'previous'
+        }
+      });
+    }
+
+    /**
+    * Initializes the plugin by creating jQuery collections, setting attributes, and starting the animation.
+    * @function
+    * @private
+    */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      // @TODO: consider discussion on PR #9278 about DOM pollution by changeSlide
+      this._reset();
+
+      this.$wrapper = this.$element.find('.' + this.options.containerClass);
+      this.$slides = this.$element.find('.' + this.options.slideClass);
+
+      var $images = this.$element.find('img'),
+          initActive = this.$slides.filter('.is-active'),
+          id = this.$element[0].id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__foundation_util_core__["a" /* GetYoDigits */])(6, 'orbit');
+
+      this.$element.attr({
+        'data-resize': id,
+        'id': id
+      });
+
+      if (!initActive.length) {
+        this.$slides.eq(0).addClass('is-active');
+      }
+
+      if (!this.options.useMUI) {
+        this.$slides.addClass('no-motionui');
+      }
+
+      if ($images.length) {
+        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__foundation_util_imageLoader__["a" /* onImagesLoaded */])($images, this._prepareForOrbit.bind(this));
+      } else {
+        this._prepareForOrbit(); //hehe
+      }
+
+      if (this.options.bullets) {
+        this._loadBullets();
+      }
+
+      this._events();
+
+      if (this.options.autoPlay && this.$slides.length > 1) {
+        this.geoSync();
+      }
+
+      if (this.options.accessible) {
+        // allow wrapper to be focusable to enable arrow navigation
+        this.$wrapper.attr('tabindex', 0);
+      }
+    }
+
+    /**
+    * Creates a jQuery collection of bullets, if they are being used.
+    * @function
+    * @private
+    */
+
+  }, {
+    key: '_loadBullets',
+    value: function _loadBullets() {
+      this.$bullets = this.$element.find('.' + this.options.boxOfBullets).find('button');
+    }
+
+    /**
+    * Sets a `timer` object on the orbit, and starts the counter for the next slide.
+    * @function
+    */
+
+  }, {
+    key: 'geoSync',
+    value: function geoSync() {
+      var _this = this;
+      this.timer = new __WEBPACK_IMPORTED_MODULE_3__foundation_util_timer__["a" /* Timer */](this.$element, {
+        duration: this.options.timerDelay,
+        infinite: false
+      }, function () {
+        _this.changeSlide(true);
+      });
+      this.timer.start();
+    }
+
+    /**
+    * Sets wrapper and slide heights for the orbit.
+    * @function
+    * @private
+    */
+
+  }, {
+    key: '_prepareForOrbit',
+    value: function _prepareForOrbit() {
+      var _this = this;
+      this._setWrapperHeight();
+    }
+
+    /**
+    * Calulates the height of each slide in the collection, and uses the tallest one for the wrapper height.
+    * @function
+    * @private
+    * @param {Function} cb - a callback function to fire when complete.
+    */
+
+  }, {
+    key: '_setWrapperHeight',
+    value: function _setWrapperHeight(cb) {
+      //rewrite this to `for` loop
+      var max = 0,
+          temp,
+          counter = 0,
+          _this = this;
+
+      this.$slides.each(function () {
+        temp = this.getBoundingClientRect().height;
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).attr('data-slide', counter);
+
+        if (!/mui/g.test(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this)[0].className) && _this.$slides.filter('.is-active')[0] !== _this.$slides.eq(counter)[0]) {
+          //if not the active slide, set css position and display property
+          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).css({ 'position': 'relative', 'display': 'none' });
+        }
+        max = temp > max ? temp : max;
+        counter++;
+      });
+
+      if (counter === this.$slides.length) {
+        this.$wrapper.css({ 'height': max }); //only change the wrapper height property once.
+        if (cb) {
+          cb(max);
+        } //fire callback with max height dimension.
+      }
+    }
+
+    /**
+    * Sets the max-height of each slide.
+    * @function
+    * @private
+    */
+
+  }, {
+    key: '_setSlideHeight',
+    value: function _setSlideHeight(height) {
+      this.$slides.each(function () {
+        __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).css('max-height', height);
+      });
+    }
+
+    /**
+    * Adds event listeners to basically everything within the element.
+    * @function
+    * @private
+    */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this;
+
+      //***************************************
+      //**Now using custom event - thanks to:**
+      //**      Yohai Ararat of Toronto      **
+      //***************************************
+      //
+      this.$element.off('.resizeme.zf.trigger').on({
+        'resizeme.zf.trigger': this._prepareForOrbit.bind(this)
+      });
+      if (this.$slides.length > 1) {
+
+        if (this.options.swipe) {
+          this.$slides.off('swipeleft.zf.orbit swiperight.zf.orbit').on('swipeleft.zf.orbit', function (e) {
+            e.preventDefault();
+            _this.changeSlide(true);
+          }).on('swiperight.zf.orbit', function (e) {
+            e.preventDefault();
+            _this.changeSlide(false);
+          });
+        }
+        //***************************************
+
+        if (this.options.autoPlay) {
+          this.$slides.on('click.zf.orbit', function () {
+            _this.$element.data('clickedOn', _this.$element.data('clickedOn') ? false : true);
+            _this.timer[_this.$element.data('clickedOn') ? 'pause' : 'start']();
+          });
+
+          if (this.options.pauseOnHover) {
+            this.$element.on('mouseenter.zf.orbit', function () {
+              _this.timer.pause();
+            }).on('mouseleave.zf.orbit', function () {
+              if (!_this.$element.data('clickedOn')) {
+                _this.timer.start();
+              }
+            });
+          }
+        }
+
+        if (this.options.navButtons) {
+          var $controls = this.$element.find('.' + this.options.nextClass + ', .' + this.options.prevClass);
+          $controls.attr('tabindex', 0)
+          //also need to handle enter/return and spacebar key presses
+          .on('click.zf.orbit touchend.zf.orbit', function (e) {
+            e.preventDefault();
+            _this.changeSlide(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).hasClass(_this.options.nextClass));
+          });
+        }
+
+        if (this.options.bullets) {
+          this.$bullets.on('click.zf.orbit touchend.zf.orbit', function () {
+            if (/is-active/g.test(this.className)) {
+              return false;
+            } //if this is active, kick out of function.
+            var idx = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).data('slide'),
+                ltr = idx > _this.$slides.filter('.is-active').data('slide'),
+                $slide = _this.$slides.eq(idx);
+
+            _this.changeSlide(ltr, $slide, idx);
+          });
+        }
+
+        if (this.options.accessible) {
+          this.$wrapper.add(this.$bullets).on('keydown.zf.orbit', function (e) {
+            // handle keyboard event with keyboard util
+            __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'Orbit', {
+              next: function () {
+                _this.changeSlide(true);
+              },
+              previous: function () {
+                _this.changeSlide(false);
+              },
+              handled: function () {
+                // if bullet is focused, make sure focus moves
+                if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).is(_this.$bullets)) {
+                  _this.$bullets.filter('.is-active').focus();
+                }
+              }
+            });
+          });
+        }
+      }
+    }
+
+    /**
+     * Resets Orbit so it can be reinitialized
+     */
+
+  }, {
+    key: '_reset',
+    value: function _reset() {
+      // Don't do anything if there are no slides (first run)
+      if (typeof this.$slides == 'undefined') {
+        return;
+      }
+
+      if (this.$slides.length > 1) {
+        // Remove old events
+        this.$element.off('.zf.orbit').find('*').off('.zf.orbit');
+
+        // Restart timer if autoPlay is enabled
+        if (this.options.autoPlay) {
+          this.timer.restart();
+        }
+
+        // Reset all sliddes
+        this.$slides.each(function (el) {
+          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(el).removeClass('is-active is-active is-in').removeAttr('aria-live').hide();
+        });
+
+        // Show the first slide
+        this.$slides.first().addClass('is-active').show();
+
+        // Triggers when the slide has finished animating
+        this.$element.trigger('slidechange.zf.orbit', [this.$slides.first()]);
+
+        // Select first bullet if bullets are present
+        if (this.options.bullets) {
+          this._updateBullets(0);
+        }
+      }
+    }
+
+    /**
+    * Changes the current slide to a new one.
+    * @function
+    * @param {Boolean} isLTR - flag if the slide should move left to right.
+    * @param {jQuery} chosenSlide - the jQuery element of the slide to show next, if one is selected.
+    * @param {Number} idx - the index of the new slide in its collection, if one chosen.
+    * @fires Orbit#slidechange
+    */
+
+  }, {
+    key: 'changeSlide',
+    value: function changeSlide(isLTR, chosenSlide, idx) {
+      if (!this.$slides) {
+        return;
+      } // Don't freak out if we're in the middle of cleanup
+      var $curSlide = this.$slides.filter('.is-active').eq(0);
+
+      if (/mui/g.test($curSlide[0].className)) {
+        return false;
+      } //if the slide is currently animating, kick out of the function
+
+      var $firstSlide = this.$slides.first(),
+          $lastSlide = this.$slides.last(),
+          dirIn = isLTR ? 'Right' : 'Left',
+          dirOut = isLTR ? 'Left' : 'Right',
+          _this = this,
+          $newSlide;
+
+      if (!chosenSlide) {
+        //most of the time, this will be auto played or clicked from the navButtons.
+        $newSlide = isLTR ? //if wrapping enabled, check to see if there is a `next` or `prev` sibling, if not, select the first or last slide to fill in. if wrapping not enabled, attempt to select `next` or `prev`, if there's nothing there, the function will kick out on next step. CRAZY NESTED TERNARIES!!!!!
+        this.options.infiniteWrap ? $curSlide.next('.' + this.options.slideClass).length ? $curSlide.next('.' + this.options.slideClass) : $firstSlide : $curSlide.next('.' + this.options.slideClass) : //pick next slide if moving left to right
+        this.options.infiniteWrap ? $curSlide.prev('.' + this.options.slideClass).length ? $curSlide.prev('.' + this.options.slideClass) : $lastSlide : $curSlide.prev('.' + this.options.slideClass); //pick prev slide if moving right to left
+      } else {
+        $newSlide = chosenSlide;
+      }
+
+      if ($newSlide.length) {
+        /**
+        * Triggers before the next slide starts animating in and only if a next slide has been found.
+        * @event Orbit#beforeslidechange
+        */
+        this.$element.trigger('beforeslidechange.zf.orbit', [$curSlide, $newSlide]);
+
+        if (this.options.bullets) {
+          idx = idx || this.$slides.index($newSlide); //grab index to update bullets
+          this._updateBullets(idx);
+        }
+
+        if (this.options.useMUI && !this.$element.is(':hidden')) {
+          __WEBPACK_IMPORTED_MODULE_2__foundation_util_motion__["a" /* Motion */].animateIn($newSlide.addClass('is-active').css({ 'position': 'absolute', 'top': 0 }), this.options['animInFrom' + dirIn], function () {
+            $newSlide.css({ 'position': 'relative', 'display': 'block' }).attr('aria-live', 'polite');
+          });
+
+          __WEBPACK_IMPORTED_MODULE_2__foundation_util_motion__["a" /* Motion */].animateOut($curSlide.removeClass('is-active'), this.options['animOutTo' + dirOut], function () {
+            $curSlide.removeAttr('aria-live');
+            if (_this.options.autoPlay && !_this.timer.isPaused) {
+              _this.timer.restart();
+            }
+            //do stuff?
+          });
+        } else {
+          $curSlide.removeClass('is-active is-in').removeAttr('aria-live').hide();
+          $newSlide.addClass('is-active is-in').attr('aria-live', 'polite').show();
+          if (this.options.autoPlay && !this.timer.isPaused) {
+            this.timer.restart();
+          }
+        }
+        /**
+        * Triggers when the slide has finished animating in.
+        * @event Orbit#slidechange
+        */
+        this.$element.trigger('slidechange.zf.orbit', [$newSlide]);
+      }
+    }
+
+    /**
+    * Updates the active state of the bullets, if displayed.
+    * @function
+    * @private
+    * @param {Number} idx - the index of the current slide.
+    */
+
+  }, {
+    key: '_updateBullets',
+    value: function _updateBullets(idx) {
+      var $oldBullet = this.$element.find('.' + this.options.boxOfBullets).find('.is-active').removeClass('is-active').blur(),
+          span = $oldBullet.find('span:last').detach(),
+          $newBullet = this.$bullets.eq(idx).addClass('is-active').append(span);
+    }
+
+    /**
+    * Destroys the carousel and hides the element.
+    * @function
+    */
+
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.$element.off('.zf.orbit').find('*').off('.zf.orbit').end().hide();
+    }
+  }]);
+
+  return Orbit;
+}(__WEBPACK_IMPORTED_MODULE_6__foundation_plugin__["a" /* Plugin */]);
+
+Orbit.defaults = {
+  /**
+  * Tells the JS to look for and loadBullets.
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  bullets: true,
+  /**
+  * Tells the JS to apply event listeners to nav buttons
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  navButtons: true,
+  /**
+  * motion-ui animation class to apply
+  * @option
+   * @type {string}
+  * @default 'slide-in-right'
+  */
+  animInFromRight: 'slide-in-right',
+  /**
+  * motion-ui animation class to apply
+  * @option
+   * @type {string}
+  * @default 'slide-out-right'
+  */
+  animOutToRight: 'slide-out-right',
+  /**
+  * motion-ui animation class to apply
+  * @option
+   * @type {string}
+  * @default 'slide-in-left'
+  *
+  */
+  animInFromLeft: 'slide-in-left',
+  /**
+  * motion-ui animation class to apply
+  * @option
+   * @type {string}
+  * @default 'slide-out-left'
+  */
+  animOutToLeft: 'slide-out-left',
+  /**
+  * Allows Orbit to automatically animate on page load.
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  autoPlay: true,
+  /**
+  * Amount of time, in ms, between slide transitions
+  * @option
+   * @type {number}
+  * @default 5000
+  */
+  timerDelay: 5000,
+  /**
+  * Allows Orbit to infinitely loop through the slides
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  infiniteWrap: true,
+  /**
+  * Allows the Orbit slides to bind to swipe events for mobile, requires an additional util library
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  swipe: true,
+  /**
+  * Allows the timing function to pause animation on hover.
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  pauseOnHover: true,
+  /**
+  * Allows Orbit to bind keyboard events to the slider, to animate frames with arrow keys
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  accessible: true,
+  /**
+  * Class applied to the container of Orbit
+  * @option
+   * @type {string}
+  * @default 'orbit-container'
+  */
+  containerClass: 'orbit-container',
+  /**
+  * Class applied to individual slides.
+  * @option
+   * @type {string}
+  * @default 'orbit-slide'
+  */
+  slideClass: 'orbit-slide',
+  /**
+  * Class applied to the bullet container. You're welcome.
+  * @option
+   * @type {string}
+  * @default 'orbit-bullets'
+  */
+  boxOfBullets: 'orbit-bullets',
+  /**
+  * Class applied to the `next` navigation button.
+  * @option
+   * @type {string}
+  * @default 'orbit-next'
+  */
+  nextClass: 'orbit-next',
+  /**
+  * Class applied to the `previous` navigation button.
+  * @option
+   * @type {string}
+  * @default 'orbit-previous'
+  */
+  prevClass: 'orbit-previous',
+  /**
+  * Boolean to flag the js to use motion ui classes or not. Default to true for backwards compatability.
+  * @option
+   * @type {boolean}
+  * @default true
+  */
+  useMUI: true
+};
+
+
+
+/***/ }),
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1972,9 +6810,9 @@ Interchange.SPECIAL_QUERIES = {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_plugin__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_dropdownMenu__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_drilldown__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__foundation_accordionMenu__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_dropdownMenu__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_drilldown__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__foundation_accordionMenu__ = __webpack_require__(9);
 
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2167,7 +7005,210 @@ ResponsiveMenu.defaults = {};
 
 
 /***/ }),
-/* 12 */
+/* 23 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ResponsiveToggle; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_motion__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_plugin__ = __webpack_require__(2);
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+
+
+
+
+
+
+/**
+ * ResponsiveToggle module.
+ * @module foundation.responsiveToggle
+ * @requires foundation.util.mediaQuery
+ * @requires foundation.util.motion
+ */
+
+var ResponsiveToggle = function (_Plugin) {
+  _inherits(ResponsiveToggle, _Plugin);
+
+  function ResponsiveToggle() {
+    _classCallCheck(this, ResponsiveToggle);
+
+    return _possibleConstructorReturn(this, (ResponsiveToggle.__proto__ || Object.getPrototypeOf(ResponsiveToggle)).apply(this, arguments));
+  }
+
+  _createClass(ResponsiveToggle, [{
+    key: '_setup',
+
+    /**
+     * Creates a new instance of Tab Bar.
+     * @class
+     * @name ResponsiveToggle
+     * @fires ResponsiveToggle#init
+     * @param {jQuery} element - jQuery object to attach tab bar functionality to.
+     * @param {Object} options - Overrides to the default plugin settings.
+     */
+    value: function _setup(element, options) {
+      this.$element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(element);
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, ResponsiveToggle.defaults, this.$element.data(), options);
+      this.className = 'ResponsiveToggle'; // ie9 back compat
+
+      this._init();
+      this._events();
+    }
+
+    /**
+     * Initializes the tab bar by finding the target element, toggling element, and running update().
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_init',
+    value: function _init() {
+      __WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__["a" /* MediaQuery */]._init();
+      var targetID = this.$element.data('responsive-toggle');
+      if (!targetID) {
+        console.error('Your tab bar needs an ID of a Menu as the value of data-tab-bar.');
+      }
+
+      this.$targetMenu = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('#' + targetID);
+      this.$toggler = this.$element.find('[data-toggle]').filter(function () {
+        var target = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).data('toggle');
+        return target === targetID || target === "";
+      });
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, this.options, this.$targetMenu.data());
+
+      // If they were set, parse the animation classes
+      if (this.options.animate) {
+        var input = this.options.animate.split(' ');
+
+        this.animationIn = input[0];
+        this.animationOut = input[1] || null;
+      }
+
+      this._update();
+    }
+
+    /**
+     * Adds necessary event handlers for the tab bar to work.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_events',
+    value: function _events() {
+      var _this = this;
+
+      this._updateMqHandler = this._update.bind(this);
+
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).on('changed.zf.mediaquery', this._updateMqHandler);
+
+      this.$toggler.on('click.zf.responsiveToggle', this.toggleMenu.bind(this));
+    }
+
+    /**
+     * Checks the current media query to determine if the tab bar should be visible or hidden.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_update',
+    value: function _update() {
+      // Mobile
+      if (!__WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__["a" /* MediaQuery */].atLeast(this.options.hideFor)) {
+        this.$element.show();
+        this.$targetMenu.hide();
+      }
+
+      // Desktop
+      else {
+          this.$element.hide();
+          this.$targetMenu.show();
+        }
+    }
+
+    /**
+     * Toggles the element attached to the tab bar. The toggle only happens if the screen is small enough to allow it.
+     * @function
+     * @fires ResponsiveToggle#toggled
+     */
+
+  }, {
+    key: 'toggleMenu',
+    value: function toggleMenu() {
+      var _this3 = this;
+
+      if (!__WEBPACK_IMPORTED_MODULE_1__foundation_util_mediaQuery__["a" /* MediaQuery */].atLeast(this.options.hideFor)) {
+        /**
+         * Fires when the element attached to the tab bar toggles.
+         * @event ResponsiveToggle#toggled
+         */
+        if (this.options.animate) {
+          if (this.$targetMenu.is(':hidden')) {
+            __WEBPACK_IMPORTED_MODULE_2__foundation_util_motion__["a" /* Motion */].animateIn(this.$targetMenu, this.animationIn, function () {
+              _this3.$element.trigger('toggled.zf.responsiveToggle');
+              _this3.$targetMenu.find('[data-mutate]').triggerHandler('mutateme.zf.trigger');
+            });
+          } else {
+            __WEBPACK_IMPORTED_MODULE_2__foundation_util_motion__["a" /* Motion */].animateOut(this.$targetMenu, this.animationOut, function () {
+              _this3.$element.trigger('toggled.zf.responsiveToggle');
+            });
+          }
+        } else {
+          this.$targetMenu.toggle(0);
+          this.$targetMenu.find('[data-mutate]').trigger('mutateme.zf.trigger');
+          this.$element.trigger('toggled.zf.responsiveToggle');
+        }
+      }
+    }
+  }, {
+    key: '_destroy',
+    value: function _destroy() {
+      this.$element.off('.zf.responsiveToggle');
+      this.$toggler.off('.zf.responsiveToggle');
+
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(window).off('changed.zf.mediaquery', this._updateMqHandler);
+    }
+  }]);
+
+  return ResponsiveToggle;
+}(__WEBPACK_IMPORTED_MODULE_3__foundation_plugin__["a" /* Plugin */]);
+
+ResponsiveToggle.defaults = {
+  /**
+   * The breakpoint after which the menu is always shown, and the tab bar is hidden.
+   * @option
+   * @type {string}
+   * @default 'medium'
+   */
+  hideFor: 'medium',
+
+  /**
+   * To decide if the toggle should be animated or not.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  animate: false
+};
+
+
+
+/***/ }),
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2176,7 +7217,7 @@ ResponsiveMenu.defaults = {};
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_mediaQuery__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_motion__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_motion__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_plugin__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_util_triggers__ = __webpack_require__(5);
 
@@ -2813,7 +7854,7 @@ function mobileSniff() {
 
 
 /***/ }),
-/* 13 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3393,17 +8434,16 @@ function emCalc(em) {
 
 
 /***/ }),
-/* 14 */
+/* 26 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AccordionMenu; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Toggler; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_plugin__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_motion__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_plugin__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_triggers__ = __webpack_require__(5);
 
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -3419,378 +8459,185 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 
-
 /**
- * AccordionMenu module.
- * @module foundation.accordionMenu
- * @requires foundation.util.keyboard
- * @requires foundation.util.nest
+ * Toggler module.
+ * @module foundation.toggler
+ * @requires foundation.util.motion
+ * @requires foundation.util.triggers
  */
 
-var AccordionMenu = function (_Plugin) {
-  _inherits(AccordionMenu, _Plugin);
+var Toggler = function (_Plugin) {
+  _inherits(Toggler, _Plugin);
 
-  function AccordionMenu() {
-    _classCallCheck(this, AccordionMenu);
+  function Toggler() {
+    _classCallCheck(this, Toggler);
 
-    return _possibleConstructorReturn(this, (AccordionMenu.__proto__ || Object.getPrototypeOf(AccordionMenu)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Toggler.__proto__ || Object.getPrototypeOf(Toggler)).apply(this, arguments));
   }
 
-  _createClass(AccordionMenu, [{
+  _createClass(Toggler, [{
     key: '_setup',
 
     /**
-     * Creates a new instance of an accordion menu.
+     * Creates a new instance of Toggler.
      * @class
-     * @name AccordionMenu
-     * @fires AccordionMenu#init
-     * @param {jQuery} element - jQuery object to make into an accordion menu.
+     * @name Toggler
+     * @fires Toggler#init
+     * @param {Object} element - jQuery object to add the trigger to.
      * @param {Object} options - Overrides to the default plugin settings.
      */
     value: function _setup(element, options) {
       this.$element = element;
-      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, AccordionMenu.defaults, this.$element.data(), options);
-      this.className = 'AccordionMenu'; // ie9 back compat
+      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Toggler.defaults, element.data(), options);
+      this.className = '';
+      this.className = 'Toggler'; // ie9 back compat
+
+      // Triggers init is idempotent, just need to make sure it is initialized
+      __WEBPACK_IMPORTED_MODULE_3__foundation_util_triggers__["a" /* Triggers */].init(__WEBPACK_IMPORTED_MODULE_0_jquery___default.a);
 
       this._init();
-
-      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('AccordionMenu', {
-        'ENTER': 'toggle',
-        'SPACE': 'toggle',
-        'ARROW_RIGHT': 'open',
-        'ARROW_UP': 'up',
-        'ARROW_DOWN': 'down',
-        'ARROW_LEFT': 'close',
-        'ESCAPE': 'closeAll'
-      });
+      this._events();
     }
 
     /**
-     * Initializes the accordion menu by hiding all nested menus.
+     * Initializes the Toggler plugin by parsing the toggle class from data-toggler, or animation classes from data-animate.
+     * @function
      * @private
      */
 
   }, {
     key: '_init',
     value: function _init() {
-      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Feather(this.$element, 'accordion');
+      var input;
+      // Parse animation classes if they were set
+      if (this.options.animate) {
+        input = this.options.animate.split(' ');
 
-      var _this = this;
-
-      this.$element.find('[data-submenu]').not('.is-active').slideUp(0); //.find('a').css('padding-left', '1rem');
-      this.$element.attr({
-        'role': 'tree',
-        'aria-multiselectable': this.options.multiOpen
-      });
-
-      this.$menuLinks = this.$element.find('.is-accordion-submenu-parent');
-      this.$menuLinks.each(function () {
-        var linkId = this.id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'acc-menu-link'),
-            $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-            $sub = $elem.children('[data-submenu]'),
-            subId = $sub[0].id || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'acc-menu'),
-            isActive = $sub.hasClass('is-active');
-
-        if (_this.options.submenuToggle) {
-          $elem.addClass('has-submenu-toggle');
-          $elem.children('a').after('<button id="' + linkId + '" class="submenu-toggle" aria-controls="' + subId + '" aria-expanded="' + isActive + '" title="' + _this.options.submenuToggleText + '"><span class="submenu-toggle-text">' + _this.options.submenuToggleText + '</span></button>');
-        } else {
-          $elem.attr({
-            'aria-controls': subId,
-            'aria-expanded': isActive,
-            'id': linkId
-          });
-        }
-        $sub.attr({
-          'aria-labelledby': linkId,
-          'aria-hidden': !isActive,
-          'role': 'group',
-          'id': subId
-        });
-      });
-      this.$element.find('li').attr({
-        'role': 'treeitem'
-      });
-      var initPanes = this.$element.find('.is-active');
-      if (initPanes.length) {
-        var _this = this;
-        initPanes.each(function () {
-          _this.down(__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this));
-        });
+        this.animationIn = input[0];
+        this.animationOut = input[1] || null;
       }
-      this._events();
+      // Otherwise, parse toggle class
+      else {
+          input = this.$element.data('toggler');
+          // Allow for a . at the beginning of the string
+          this.className = input[0] === '.' ? input.slice(1) : input;
+        }
+
+      // Add ARIA attributes to triggers
+      var id = this.$element[0].id;
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()('[data-open="' + id + '"], [data-close="' + id + '"], [data-toggle="' + id + '"]').attr('aria-controls', id);
+      // If the target is hidden, add aria-hidden
+      this.$element.attr('aria-expanded', this.$element.is(':hidden') ? false : true);
     }
 
     /**
-     * Adds event handlers for items within the menu.
+     * Initializes events for the toggle trigger.
+     * @function
      * @private
      */
 
   }, {
     key: '_events',
     value: function _events() {
-      var _this = this;
-
-      this.$element.find('li').each(function () {
-        var $submenu = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('[data-submenu]');
-
-        if ($submenu.length) {
-          if (_this.options.submenuToggle) {
-            __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('.submenu-toggle').off('click.zf.accordionMenu').on('click.zf.accordionMenu', function (e) {
-              _this.toggle($submenu);
-            });
-          } else {
-            __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('a').off('click.zf.accordionMenu').on('click.zf.accordionMenu', function (e) {
-              e.preventDefault();
-              _this.toggle($submenu);
-            });
-          }
-        }
-      }).on('keydown.zf.accordionmenu', function (e) {
-        var $element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-            $elements = $element.parent('ul').children('li'),
-            $prevElement,
-            $nextElement,
-            $target = $element.children('[data-submenu]');
-
-        $elements.each(function (i) {
-          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is($element)) {
-            $prevElement = $elements.eq(Math.max(0, i - 1)).find('a').first();
-            $nextElement = $elements.eq(Math.min(i + 1, $elements.length - 1)).find('a').first();
-
-            if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('[data-submenu]:visible').length) {
-              // has open sub menu
-              $nextElement = $element.find('li:first-child').find('a').first();
-            }
-            if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is(':first-child')) {
-              // is first element of sub menu
-              $prevElement = $element.parents('li').first().find('a').first();
-            } else if ($prevElement.parents('li').first().children('[data-submenu]:visible').length) {
-              // if previous element has open sub menu
-              $prevElement = $prevElement.parents('li').find('li:last-child').find('a').first();
-            }
-            if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is(':last-child')) {
-              // is last element of sub menu
-              $nextElement = $element.parents('li').first().next('li').find('a').first();
-            }
-
-            return;
-          }
-        });
-
-        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'AccordionMenu', {
-          open: function () {
-            if ($target.is(':hidden')) {
-              _this.down($target);
-              $target.find('li').first().find('a').first().focus();
-            }
-          },
-          close: function () {
-            if ($target.length && !$target.is(':hidden')) {
-              // close active sub of this item
-              _this.up($target);
-            } else if ($element.parent('[data-submenu]').length) {
-              // close currently open sub
-              _this.up($element.parent('[data-submenu]'));
-              $element.parents('li').first().find('a').first().focus();
-            }
-          },
-          up: function () {
-            $prevElement.focus();
-            return true;
-          },
-          down: function () {
-            $nextElement.focus();
-            return true;
-          },
-          toggle: function () {
-            if (_this.options.submenuToggle) {
-              return false;
-            }
-            if ($element.children('[data-submenu]').length) {
-              _this.toggle($element.children('[data-submenu]'));
-              return true;
-            }
-          },
-          closeAll: function () {
-            _this.hideAll();
-          },
-          handled: function (preventDefault) {
-            if (preventDefault) {
-              e.preventDefault();
-            }
-            e.stopImmediatePropagation();
-          }
-        });
-      }); //.attr('tabindex', 0);
+      this.$element.off('toggle.zf.trigger').on('toggle.zf.trigger', this.toggle.bind(this));
     }
 
     /**
-     * Closes all panes of the menu.
+     * Toggles the target class on the target element. An event is fired from the original trigger depending on if the resultant state was "on" or "off".
      * @function
-     */
-
-  }, {
-    key: 'hideAll',
-    value: function hideAll() {
-      this.up(this.$element.find('[data-submenu]'));
-    }
-
-    /**
-     * Opens all panes of the menu.
-     * @function
-     */
-
-  }, {
-    key: 'showAll',
-    value: function showAll() {
-      this.down(this.$element.find('[data-submenu]'));
-    }
-
-    /**
-     * Toggles the open/close state of a submenu.
-     * @function
-     * @param {jQuery} $target - the submenu to toggle
+     * @fires Toggler#on
+     * @fires Toggler#off
      */
 
   }, {
     key: 'toggle',
-    value: function toggle($target) {
-      if (!$target.is(':animated')) {
-        if (!$target.is(':hidden')) {
-          this.up($target);
-        } else {
-          this.down($target);
-        }
-      }
+    value: function toggle() {
+      this[this.options.animate ? '_toggleAnimate' : '_toggleClass']();
     }
-
-    /**
-     * Opens the sub-menu defined by `$target`.
-     * @param {jQuery} $target - Sub-menu to open.
-     * @fires AccordionMenu#down
-     */
-
   }, {
-    key: 'down',
-    value: function down($target) {
+    key: '_toggleClass',
+    value: function _toggleClass() {
+      this.$element.toggleClass(this.className);
+
+      var isOn = this.$element.hasClass(this.className);
+      if (isOn) {
+        /**
+         * Fires if the target element has the class after a toggle.
+         * @event Toggler#on
+         */
+        this.$element.trigger('on.zf.toggler');
+      } else {
+        /**
+         * Fires if the target element does not have the class after a toggle.
+         * @event Toggler#off
+         */
+        this.$element.trigger('off.zf.toggler');
+      }
+
+      this._updateARIA(isOn);
+      this.$element.find('[data-mutate]').trigger('mutateme.zf.trigger');
+    }
+  }, {
+    key: '_toggleAnimate',
+    value: function _toggleAnimate() {
       var _this = this;
 
-      if (!this.options.multiOpen) {
-        this.up(this.$element.find('.is-active').not($target.parentsUntil(this.$element).add($target)));
-      }
-
-      $target.addClass('is-active').attr({ 'aria-hidden': false });
-
-      if (this.options.submenuToggle) {
-        $target.prev('.submenu-toggle').attr({ 'aria-expanded': true });
+      if (this.$element.is(':hidden')) {
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_motion__["a" /* Motion */].animateIn(this.$element, this.animationIn, function () {
+          _this._updateARIA(true);
+          this.trigger('on.zf.toggler');
+          this.find('[data-mutate]').trigger('mutateme.zf.trigger');
+        });
       } else {
-        $target.parent('.is-accordion-submenu-parent').attr({ 'aria-expanded': true });
+        __WEBPACK_IMPORTED_MODULE_1__foundation_util_motion__["a" /* Motion */].animateOut(this.$element, this.animationOut, function () {
+          _this._updateARIA(false);
+          this.trigger('off.zf.toggler');
+          this.find('[data-mutate]').trigger('mutateme.zf.trigger');
+        });
       }
-
-      $target.slideDown(_this.options.slideSpeed, function () {
-        /**
-         * Fires when the menu is done opening.
-         * @event AccordionMenu#down
-         */
-        _this.$element.trigger('down.zf.accordionMenu', [$target]);
-      });
     }
-
-    /**
-     * Closes the sub-menu defined by `$target`. All sub-menus inside the target will be closed as well.
-     * @param {jQuery} $target - Sub-menu to close.
-     * @fires AccordionMenu#up
-     */
-
   }, {
-    key: 'up',
-    value: function up($target) {
-      var _this = this;
-      $target.slideUp(_this.options.slideSpeed, function () {
-        /**
-         * Fires when the menu is done collapsing up.
-         * @event AccordionMenu#up
-         */
-        _this.$element.trigger('up.zf.accordionMenu', [$target]);
-      });
-
-      var $menus = $target.find('[data-submenu]').slideUp(0).addBack().attr('aria-hidden', true);
-
-      if (this.options.submenuToggle) {
-        $menus.prev('.submenu-toggle').attr('aria-expanded', false);
-      } else {
-        $menus.parent('.is-accordion-submenu-parent').attr('aria-expanded', false);
-      }
+    key: '_updateARIA',
+    value: function _updateARIA(isOn) {
+      this.$element.attr('aria-expanded', isOn ? true : false);
     }
 
     /**
-     * Destroys an instance of accordion menu.
-     * @fires AccordionMenu#destroyed
+     * Destroys the instance of Toggler on the element.
+     * @function
      */
 
   }, {
     key: '_destroy',
     value: function _destroy() {
-      this.$element.find('[data-submenu]').slideDown(0).css('display', '');
-      this.$element.find('a').off('click.zf.accordionMenu');
-
-      if (this.options.submenuToggle) {
-        this.$element.find('.has-submenu-toggle').removeClass('has-submenu-toggle');
-        this.$element.find('.submenu-toggle').remove();
-      }
-
-      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Burn(this.$element, 'accordion');
+      this.$element.off('.zf.toggler');
     }
   }]);
 
-  return AccordionMenu;
-}(__WEBPACK_IMPORTED_MODULE_4__foundation_plugin__["a" /* Plugin */]);
+  return Toggler;
+}(__WEBPACK_IMPORTED_MODULE_2__foundation_plugin__["a" /* Plugin */]);
 
-AccordionMenu.defaults = {
+Toggler.defaults = {
   /**
-   * Amount of time to animate the opening of a submenu in ms.
-   * @option
-   * @type {number}
-   * @default 250
-   */
-  slideSpeed: 250,
-  /**
-   * Adds a separate submenu toggle button. This allows the parent item to have a link.
-   * @option
-   * @example true
-   */
-  submenuToggle: false,
-  /**
-   * The text used for the submenu toggle if enabled. This is used for screen readers only.
-   * @option
-   * @example true
-   */
-  submenuToggleText: 'Toggle menu',
-  /**
-   * Allow the menu to have multiple open panes.
+   * Tells the plugin if the element should animated when toggled.
    * @option
    * @type {boolean}
-   * @default true
+   * @default false
    */
-  multiOpen: true
+  animate: false
 };
 
 
 
 /***/ }),
-/* 15 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Drilldown; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_util_box__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_plugin__ = __webpack_require__(2);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Positionable; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__foundation_util_box__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_plugin__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_core__ = __webpack_require__(1);
 
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -3805,1132 +8652,491 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 
+var POSITIONS = ['left', 'right', 'top', 'bottom'];
+var VERTICAL_ALIGNMENTS = ['top', 'bottom', 'center'];
+var HORIZONTAL_ALIGNMENTS = ['left', 'right', 'center'];
 
-
-
-/**
- * Drilldown module.
- * @module foundation.drilldown
- * @requires foundation.util.keyboard
- * @requires foundation.util.nest
- * @requires foundation.util.box
- */
-
-var Drilldown = function (_Plugin) {
-  _inherits(Drilldown, _Plugin);
-
-  function Drilldown() {
-    _classCallCheck(this, Drilldown);
-
-    return _possibleConstructorReturn(this, (Drilldown.__proto__ || Object.getPrototypeOf(Drilldown)).apply(this, arguments));
-  }
-
-  _createClass(Drilldown, [{
-    key: '_setup',
-
-    /**
-     * Creates a new instance of a drilldown menu.
-     * @class
-     * @name Drilldown
-     * @param {jQuery} element - jQuery object to make into an accordion menu.
-     * @param {Object} options - Overrides to the default plugin settings.
-     */
-    value: function _setup(element, options) {
-      this.$element = element;
-      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, Drilldown.defaults, this.$element.data(), options);
-      this.className = 'Drilldown'; // ie9 back compat
-
-      this._init();
-
-      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('Drilldown', {
-        'ENTER': 'open',
-        'SPACE': 'open',
-        'ARROW_RIGHT': 'next',
-        'ARROW_UP': 'up',
-        'ARROW_DOWN': 'down',
-        'ARROW_LEFT': 'previous',
-        'ESCAPE': 'close',
-        'TAB': 'down',
-        'SHIFT_TAB': 'up'
-      });
-    }
-
-    /**
-     * Initializes the drilldown by creating jQuery collections of elements
-     * @private
-     */
-
-  }, {
-    key: '_init',
-    value: function _init() {
-      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Feather(this.$element, 'drilldown');
-
-      if (this.options.autoApplyClass) {
-        this.$element.addClass('drilldown');
-      }
-
-      this.$element.attr({
-        'role': 'tree',
-        'aria-multiselectable': false
-      });
-      this.$submenuAnchors = this.$element.find('li.is-drilldown-submenu-parent').children('a');
-      this.$submenus = this.$submenuAnchors.parent('li').children('[data-submenu]').attr('role', 'group');
-      this.$menuItems = this.$element.find('li').not('.js-drilldown-back').attr('role', 'treeitem').find('a');
-      this.$element.attr('data-mutate', this.$element.attr('data-drilldown') || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["a" /* GetYoDigits */])(6, 'drilldown'));
-
-      this._prepareMenu();
-      this._registerEvents();
-
-      this._keyboardEvents();
-    }
-
-    /**
-     * prepares drilldown menu by setting attributes to links and elements
-     * sets a min height to prevent content jumping
-     * wraps the element if not already wrapped
-     * @private
-     * @function
-     */
-
-  }, {
-    key: '_prepareMenu',
-    value: function _prepareMenu() {
-      var _this = this;
-      // if(!this.options.holdOpen){
-      //   this._menuLinkEvents();
-      // }
-      this.$submenuAnchors.each(function () {
-        var $link = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this);
-        var $sub = $link.parent();
-        if (_this.options.parentLink) {
-          $link.clone().prependTo($sub.children('[data-submenu]')).wrap('<li class="is-submenu-parent-item is-submenu-item is-drilldown-submenu-item" role="menuitem"></li>');
-        }
-        $link.data('savedHref', $link.attr('href')).removeAttr('href').attr('tabindex', 0);
-        $link.children('[data-submenu]').attr({
-          'aria-hidden': true,
-          'tabindex': 0,
-          'role': 'group'
-        });
-        _this._events($link);
-      });
-      this.$submenus.each(function () {
-        var $menu = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-            $back = $menu.find('.js-drilldown-back');
-        if (!$back.length) {
-          switch (_this.options.backButtonPosition) {
-            case "bottom":
-              $menu.append(_this.options.backButton);
-              break;
-            case "top":
-              $menu.prepend(_this.options.backButton);
-              break;
-            default:
-              console.error("Unsupported backButtonPosition value '" + _this.options.backButtonPosition + "'");
-          }
-        }
-        _this._back($menu);
-      });
-
-      this.$submenus.addClass('invisible');
-      if (!this.options.autoHeight) {
-        this.$submenus.addClass('drilldown-submenu-cover-previous');
-      }
-
-      // create a wrapper on element if it doesn't exist.
-      if (!this.$element.parent().hasClass('is-drilldown')) {
-        this.$wrapper = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this.options.wrapper).addClass('is-drilldown');
-        if (this.options.animateHeight) this.$wrapper.addClass('animate-height');
-        this.$element.wrap(this.$wrapper);
-      }
-      // set wrapper
-      this.$wrapper = this.$element.parent();
-      this.$wrapper.css(this._getMaxDims());
-    }
-  }, {
-    key: '_resize',
-    value: function _resize() {
-      this.$wrapper.css({ 'max-width': 'none', 'min-height': 'none' });
-      // _getMaxDims has side effects (boo) but calling it should update all other necessary heights & widths
-      this.$wrapper.css(this._getMaxDims());
-    }
-
-    /**
-     * Adds event handlers to elements in the menu.
-     * @function
-     * @private
-     * @param {jQuery} $elem - the current menu item to add handlers to.
-     */
-
-  }, {
-    key: '_events',
-    value: function _events($elem) {
-      var _this = this;
-
-      $elem.off('click.zf.drilldown').on('click.zf.drilldown', function (e) {
-        if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).parentsUntil('ul', 'li').hasClass('is-drilldown-submenu-parent')) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-
-        // if(e.target !== e.currentTarget.firstElementChild){
-        //   return false;
-        // }
-        _this._show($elem.parent('li'));
-
-        if (_this.options.closeOnClick) {
-          var $body = __WEBPACK_IMPORTED_MODULE_0_jquery___default()('body');
-          $body.off('.zf.drilldown').on('click.zf.drilldown', function (e) {
-            if (e.target === _this.$element[0] || __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.contains(_this.$element[0], e.target)) {
-              return;
-            }
-            e.preventDefault();
-            _this._hideAll();
-            $body.off('.zf.drilldown');
-          });
-        }
-      });
-    }
-
-    /**
-     * Adds event handlers to the menu element.
-     * @function
-     * @private
-     */
-
-  }, {
-    key: '_registerEvents',
-    value: function _registerEvents() {
-      if (this.options.scrollTop) {
-        this._bindHandler = this._scrollTop.bind(this);
-        this.$element.on('open.zf.drilldown hide.zf.drilldown closed.zf.drilldown', this._bindHandler);
-      }
-      this.$element.on('mutateme.zf.trigger', this._resize.bind(this));
-    }
-
-    /**
-     * Scroll to Top of Element or data-scroll-top-element
-     * @function
-     * @fires Drilldown#scrollme
-     */
-
-  }, {
-    key: '_scrollTop',
-    value: function _scrollTop() {
-      var _this = this;
-      var $scrollTopElement = _this.options.scrollTopElement != '' ? __WEBPACK_IMPORTED_MODULE_0_jquery___default()(_this.options.scrollTopElement) : _this.$element,
-          scrollPos = parseInt($scrollTopElement.offset().top + _this.options.scrollTopOffset, 10);
-      __WEBPACK_IMPORTED_MODULE_0_jquery___default()('html, body').stop(true).animate({ scrollTop: scrollPos }, _this.options.animationDuration, _this.options.animationEasing, function () {
-        /**
-          * Fires after the menu has scrolled
-          * @event Drilldown#scrollme
-          */
-        if (this === __WEBPACK_IMPORTED_MODULE_0_jquery___default()('html')[0]) _this.$element.trigger('scrollme.zf.drilldown');
-      });
-    }
-
-    /**
-     * Adds keydown event listener to `li`'s in the menu.
-     * @private
-     */
-
-  }, {
-    key: '_keyboardEvents',
-    value: function _keyboardEvents() {
-      var _this = this;
-
-      this.$menuItems.add(this.$element.find('.js-drilldown-back > a, .is-submenu-parent-item > a')).on('keydown.zf.drilldown', function (e) {
-        var $element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-            $elements = $element.parent('li').parent('ul').children('li').children('a'),
-            $prevElement,
-            $nextElement;
-
-        $elements.each(function (i) {
-          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is($element)) {
-            $prevElement = $elements.eq(Math.max(0, i - 1));
-            $nextElement = $elements.eq(Math.min(i + 1, $elements.length - 1));
-            return;
-          }
-        });
-
-        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'Drilldown', {
-          next: function () {
-            if ($element.is(_this.$submenuAnchors)) {
-              _this._show($element.parent('li'));
-              $element.parent('li').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
-                $element.parent('li').find('ul li a').filter(_this.$menuItems).first().focus();
-              });
-              return true;
-            }
-          },
-          previous: function () {
-            _this._hide($element.parent('li').parent('ul'));
-            $element.parent('li').parent('ul').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
-              setTimeout(function () {
-                $element.parent('li').parent('ul').parent('li').children('a').first().focus();
-              }, 1);
-            });
-            return true;
-          },
-          up: function () {
-            $prevElement.focus();
-            // Don't tap focus on first element in root ul
-            return !$element.is(_this.$element.find('> li:first-child > a'));
-          },
-          down: function () {
-            $nextElement.focus();
-            // Don't tap focus on last element in root ul
-            return !$element.is(_this.$element.find('> li:last-child > a'));
-          },
-          close: function () {
-            // Don't close on element in root ul
-            if (!$element.is(_this.$element.find('> li > a'))) {
-              _this._hide($element.parent().parent());
-              $element.parent().parent().siblings('a').focus();
-            }
-          },
-          open: function () {
-            if (!$element.is(_this.$menuItems)) {
-              // not menu item means back button
-              _this._hide($element.parent('li').parent('ul'));
-              $element.parent('li').parent('ul').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
-                setTimeout(function () {
-                  $element.parent('li').parent('ul').parent('li').children('a').first().focus();
-                }, 1);
-              });
-              return true;
-            } else if ($element.is(_this.$submenuAnchors)) {
-              _this._show($element.parent('li'));
-              $element.parent('li').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($element), function () {
-                $element.parent('li').find('ul li a').filter(_this.$menuItems).first().focus();
-              });
-              return true;
-            }
-          },
-          handled: function (preventDefault) {
-            if (preventDefault) {
-              e.preventDefault();
-            }
-            e.stopImmediatePropagation();
-          }
-        });
-      }); // end keyboardAccess
-    }
-
-    /**
-     * Closes all open elements, and returns to root menu.
-     * @function
-     * @fires Drilldown#closed
-     */
-
-  }, {
-    key: '_hideAll',
-    value: function _hideAll() {
-      var $elem = this.$element.find('.is-drilldown-submenu.is-active').addClass('is-closing');
-      if (this.options.autoHeight) this.$wrapper.css({ height: $elem.parent().closest('ul').data('calcHeight') });
-      $elem.one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($elem), function (e) {
-        $elem.removeClass('is-active is-closing');
-      });
-      /**
-       * Fires when the menu is fully closed.
-       * @event Drilldown#closed
-       */
-      this.$element.trigger('closed.zf.drilldown');
-    }
-
-    /**
-     * Adds event listener for each `back` button, and closes open menus.
-     * @function
-     * @fires Drilldown#back
-     * @param {jQuery} $elem - the current sub-menu to add `back` event.
-     */
-
-  }, {
-    key: '_back',
-    value: function _back($elem) {
-      var _this = this;
-      $elem.off('click.zf.drilldown');
-      $elem.children('.js-drilldown-back').on('click.zf.drilldown', function (e) {
-        e.stopImmediatePropagation();
-        // console.log('mouseup on back');
-        _this._hide($elem);
-
-        // If there is a parent submenu, call show
-        var parentSubMenu = $elem.parent('li').parent('ul').parent('li');
-        if (parentSubMenu.length) {
-          _this._show(parentSubMenu);
-        }
-      });
-    }
-
-    /**
-     * Adds event listener to menu items w/o submenus to close open menus on click.
-     * @function
-     * @private
-     */
-
-  }, {
-    key: '_menuLinkEvents',
-    value: function _menuLinkEvents() {
-      var _this = this;
-      this.$menuItems.not('.is-drilldown-submenu-parent').off('click.zf.drilldown').on('click.zf.drilldown', function (e) {
-        // e.stopImmediatePropagation();
-        setTimeout(function () {
-          _this._hideAll();
-        }, 0);
-      });
-    }
-
-    /**
-     * Opens a submenu.
-     * @function
-     * @fires Drilldown#open
-     * @param {jQuery} $elem - the current element with a submenu to open, i.e. the `li` tag.
-     */
-
-  }, {
-    key: '_show',
-    value: function _show($elem) {
-      if (this.options.autoHeight) this.$wrapper.css({ height: $elem.children('[data-submenu]').data('calcHeight') });
-      $elem.attr('aria-expanded', true);
-      $elem.children('[data-submenu]').addClass('is-active').removeClass('invisible').attr('aria-hidden', false);
-      /**
-       * Fires when the submenu has opened.
-       * @event Drilldown#open
-       */
-      this.$element.trigger('open.zf.drilldown', [$elem]);
-    }
-  }, {
-    key: '_hide',
-
-
-    /**
-     * Hides a submenu
-     * @function
-     * @fires Drilldown#hide
-     * @param {jQuery} $elem - the current sub-menu to hide, i.e. the `ul` tag.
-     */
-    value: function _hide($elem) {
-      if (this.options.autoHeight) this.$wrapper.css({ height: $elem.parent().closest('ul').data('calcHeight') });
-      var _this = this;
-      $elem.parent('li').attr('aria-expanded', false);
-      $elem.attr('aria-hidden', true).addClass('is-closing');
-      $elem.addClass('is-closing').one(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__foundation_util_core__["b" /* transitionend */])($elem), function () {
-        $elem.removeClass('is-active is-closing');
-        $elem.blur().addClass('invisible');
-      });
-      /**
-       * Fires when the submenu has closed.
-       * @event Drilldown#hide
-       */
-      $elem.trigger('hide.zf.drilldown', [$elem]);
-    }
-
-    /**
-     * Iterates through the nested menus to calculate the min-height, and max-width for the menu.
-     * Prevents content jumping.
-     * @function
-     * @private
-     */
-
-  }, {
-    key: '_getMaxDims',
-    value: function _getMaxDims() {
-      var maxHeight = 0,
-          result = {},
-          _this = this;
-      this.$submenus.add(this.$element).each(function () {
-        var numOfElems = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).children('li').length;
-        var height = __WEBPACK_IMPORTED_MODULE_4__foundation_util_box__["a" /* Box */].GetDimensions(this).height;
-        maxHeight = height > maxHeight ? height : maxHeight;
-        if (_this.options.autoHeight) {
-          __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).data('calcHeight', height);
-          if (!__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).hasClass('is-drilldown-submenu')) result['height'] = height;
-        }
-      });
-
-      if (!this.options.autoHeight) result['min-height'] = maxHeight + 'px';
-
-      result['max-width'] = this.$element[0].getBoundingClientRect().width + 'px';
-
-      return result;
-    }
-
-    /**
-     * Destroys the Drilldown Menu
-     * @function
-     */
-
-  }, {
-    key: '_destroy',
-    value: function _destroy() {
-      if (this.options.scrollTop) this.$element.off('.zf.drilldown', this._bindHandler);
-      this._hideAll();
-      this.$element.off('mutateme.zf.trigger');
-      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Burn(this.$element, 'drilldown');
-      this.$element.unwrap().find('.js-drilldown-back, .is-submenu-parent-item').remove().end().find('.is-active, .is-closing, .is-drilldown-submenu').removeClass('is-active is-closing is-drilldown-submenu').end().find('[data-submenu]').removeAttr('aria-hidden tabindex role');
-      this.$submenuAnchors.each(function () {
-        __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).off('.zf.drilldown');
-      });
-
-      this.$submenus.removeClass('drilldown-submenu-cover-previous invisible');
-
-      this.$element.find('a').each(function () {
-        var $link = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this);
-        $link.removeAttr('tabindex');
-        if ($link.data('savedHref')) {
-          $link.attr('href', $link.data('savedHref')).removeData('savedHref');
-        } else {
-          return;
-        }
-      });
-    }
-  }]);
-
-  return Drilldown;
-}(__WEBPACK_IMPORTED_MODULE_5__foundation_plugin__["a" /* Plugin */]);
-
-Drilldown.defaults = {
-  /**
-   * Drilldowns depend on styles in order to function properly; in the default build of Foundation these are
-   * on the `drilldown` class. This option auto-applies this class to the drilldown upon initialization.
-   * @option
-   * @type {boolian}
-   * @default true
-   */
-  autoApplyClass: true,
-  /**
-   * Markup used for JS generated back button. Prepended  or appended (see backButtonPosition) to submenu lists and deleted on `destroy` method, 'js-drilldown-back' class required. Remove the backslash (`\`) if copy and pasting.
-   * @option
-   * @type {string}
-   * @default '<li class="js-drilldown-back"><a tabindex="0">Back</a></li>'
-   */
-  backButton: '<li class="js-drilldown-back"><a tabindex="0">Back</a></li>',
-  /**
-   * Position the back button either at the top or bottom of drilldown submenus. Can be `'left'` or `'bottom'`.
-   * @option
-   * @type {string}
-   * @default top
-   */
-  backButtonPosition: 'top',
-  /**
-   * Markup used to wrap drilldown menu. Use a class name for independent styling; the JS applied class: `is-drilldown` is required. Remove the backslash (`\`) if copy and pasting.
-   * @option
-   * @type {string}
-   * @default '<div></div>'
-   */
-  wrapper: '<div></div>',
-  /**
-   * Adds the parent link to the submenu.
-   * @option
-   * @type {boolean}
-   * @default false
-   */
-  parentLink: false,
-  /**
-   * Allow the menu to return to root list on body click.
-   * @option
-   * @type {boolean}
-   * @default false
-   */
-  closeOnClick: false,
-  /**
-   * Allow the menu to auto adjust height.
-   * @option
-   * @type {boolean}
-   * @default false
-   */
-  autoHeight: false,
-  /**
-   * Animate the auto adjust height.
-   * @option
-   * @type {boolean}
-   * @default false
-   */
-  animateHeight: false,
-  /**
-   * Scroll to the top of the menu after opening a submenu or navigating back using the menu back button
-   * @option
-   * @type {boolean}
-   * @default false
-   */
-  scrollTop: false,
-  /**
-   * String jquery selector (for example 'body') of element to take offset().top from, if empty string the drilldown menu offset().top is taken
-   * @option
-   * @type {string}
-   * @default ''
-   */
-  scrollTopElement: '',
-  /**
-   * ScrollTop offset
-   * @option
-   * @type {number}
-   * @default 0
-   */
-  scrollTopOffset: 0,
-  /**
-   * Scroll animation duration
-   * @option
-   * @type {number}
-   * @default 500
-   */
-  animationDuration: 500,
-  /**
-   * Scroll animation easing. Can be `'swing'` or `'linear'`.
-   * @option
-   * @type {string}
-   * @see {@link https://api.jquery.com/animate|JQuery animate}
-   * @default 'swing'
-   */
-  animationEasing: 'swing'
-  // holdOpen: false
+var ALIGNMENTS = {
+  'left': VERTICAL_ALIGNMENTS,
+  'right': VERTICAL_ALIGNMENTS,
+  'top': HORIZONTAL_ALIGNMENTS,
+  'bottom': HORIZONTAL_ALIGNMENTS
 };
 
+function nextItem(item, array) {
+  var currentIdx = array.indexOf(item);
+  if (currentIdx === array.length - 1) {
+    return array[0];
+  } else {
+    return array[currentIdx + 1];
+  }
+}
 
+var Positionable = function (_Plugin) {
+  _inherits(Positionable, _Plugin);
 
-/***/ }),
-/* 16 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+  function Positionable() {
+    _classCallCheck(this, Positionable);
 
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DropdownMenu; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__foundation_util_box__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__foundation_util_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__foundation_plugin__ = __webpack_require__(2);
-
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-
-
-
-
-
-
-
-/**
- * DropdownMenu module.
- * @module foundation.dropdown-menu
- * @requires foundation.util.keyboard
- * @requires foundation.util.box
- * @requires foundation.util.nest
- */
-
-var DropdownMenu = function (_Plugin) {
-  _inherits(DropdownMenu, _Plugin);
-
-  function DropdownMenu() {
-    _classCallCheck(this, DropdownMenu);
-
-    return _possibleConstructorReturn(this, (DropdownMenu.__proto__ || Object.getPrototypeOf(DropdownMenu)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Positionable.__proto__ || Object.getPrototypeOf(Positionable)).apply(this, arguments));
   }
 
-  _createClass(DropdownMenu, [{
-    key: '_setup',
-
-    /**
-     * Creates a new instance of DropdownMenu.
-     * @class
-     * @name DropdownMenu
-     * @fires DropdownMenu#init
-     * @param {jQuery} element - jQuery object to make into a dropdown menu.
-     * @param {Object} options - Overrides to the default plugin settings.
-     */
-    value: function _setup(element, options) {
-      this.$element = element;
-      this.options = __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend({}, DropdownMenu.defaults, this.$element.data(), options);
-      this.className = 'DropdownMenu'; // ie9 back compat
-
-      this._init();
-
-      __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].register('DropdownMenu', {
-        'ENTER': 'open',
-        'SPACE': 'open',
-        'ARROW_RIGHT': 'next',
-        'ARROW_UP': 'up',
-        'ARROW_DOWN': 'down',
-        'ARROW_LEFT': 'previous',
-        'ESCAPE': 'close'
-      });
-    }
-
-    /**
-     * Initializes the plugin, and calls _prepareMenu
-     * @private
-     * @function
-     */
-
-  }, {
+  _createClass(Positionable, [{
     key: '_init',
+
+    /**
+     * Abstract class encapsulating the tether-like explicit positioning logic
+     * including repositioning based on overlap.
+     * Expects classes to define defaults for vOffset, hOffset, position,
+     * alignment, allowOverlap, and allowBottomOverlap. They can do this by
+     * extending the defaults, or (for now recommended due to the way docs are
+     * generated) by explicitly declaring them.
+     *
+     **/
+
     value: function _init() {
-      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Feather(this.$element, 'dropdown');
-
-      var subs = this.$element.find('li.is-dropdown-submenu-parent');
-      this.$element.children('.is-dropdown-submenu-parent').children('.is-dropdown-submenu').addClass('first-sub');
-
-      this.$menuItems = this.$element.find('[role="menuitem"]');
-      this.$tabs = this.$element.children('[role="menuitem"]');
-      this.$tabs.find('ul.is-dropdown-submenu').addClass(this.options.verticalClass);
-
-      if (this.options.alignment === 'auto') {
-        if (this.$element.hasClass(this.options.rightClass) || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__foundation_util_core__["c" /* rtl */])() || this.$element.parents('.top-bar-right').is('*')) {
-          this.options.alignment = 'right';
-          subs.addClass('opens-left');
-        } else {
-          this.options.alignment = 'left';
-          subs.addClass('opens-right');
-        }
-      } else {
-        if (this.options.alignment === 'right') {
-          subs.addClass('opens-left');
-        } else {
-          subs.addClass('opens-right');
-        }
+      this.triedPositions = {};
+      this.position = this.options.position === 'auto' ? this._getDefaultPosition() : this.options.position;
+      this.alignment = this.options.alignment === 'auto' ? this._getDefaultAlignment() : this.options.alignment;
+    }
+  }, {
+    key: '_getDefaultPosition',
+    value: function _getDefaultPosition() {
+      return 'bottom';
+    }
+  }, {
+    key: '_getDefaultAlignment',
+    value: function _getDefaultAlignment() {
+      switch (this.position) {
+        case 'bottom':
+        case 'top':
+          return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__foundation_util_core__["c" /* rtl */])() ? 'right' : 'left';
+        case 'left':
+        case 'right':
+          return 'bottom';
       }
-      this.changed = false;
-      this._events();
-    }
-  }, {
-    key: '_isVertical',
-    value: function _isVertical() {
-      return this.$tabs.css('display') === 'block' || this.$element.css('flex-direction') === 'column';
-    }
-  }, {
-    key: '_isRtl',
-    value: function _isRtl() {
-      return this.$element.hasClass('align-right') || __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__foundation_util_core__["c" /* rtl */])() && !this.$element.hasClass('align-left');
     }
 
     /**
-     * Adds event listeners to elements within the menu
-     * @private
+     * Adjusts the positionable possible positions by iterating through alignments
+     * and positions.
      * @function
+     * @private
      */
 
   }, {
-    key: '_events',
-    value: function _events() {
-      var _this = this,
-          hasTouch = 'ontouchstart' in window || typeof window.ontouchstart !== 'undefined',
-          parClass = 'is-dropdown-submenu-parent';
-
-      // used for onClick and in the keyboard handlers
-      var handleClickFn = function (e) {
-        var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).parentsUntil('ul', '.' + parClass),
-            hasSub = $elem.hasClass(parClass),
-            hasClicked = $elem.attr('data-is-click') === 'true',
-            $sub = $elem.children('.is-dropdown-submenu');
-
-        if (hasSub) {
-          if (hasClicked) {
-            if (!_this.options.closeOnClick || !_this.options.clickOpen && !hasTouch || _this.options.forceFollow && hasTouch) {
-              return;
-            } else {
-              e.stopImmediatePropagation();
-              e.preventDefault();
-              _this._hide($elem);
-            }
-          } else {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            _this._show($sub);
-            $elem.add($elem.parentsUntil(_this.$element, '.' + parClass)).attr('data-is-click', true);
-          }
-        }
-      };
-
-      if (this.options.clickOpen || hasTouch) {
-        this.$menuItems.on('click.zf.dropdownmenu touchstart.zf.dropdownmenu', handleClickFn);
+    key: '_reposition',
+    value: function _reposition() {
+      if (this._alignmentsExhausted(this.position)) {
+        this.position = nextItem(this.position, POSITIONS);
+        this.alignment = ALIGNMENTS[this.position][0];
+      } else {
+        this._realign();
       }
+    }
 
-      // Handle Leaf element Clicks
-      if (_this.options.closeOnClickInside) {
-        this.$menuItems.on('click.zf.dropdownmenu', function (e) {
-          var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-              hasSub = $elem.hasClass(parClass);
-          if (!hasSub) {
-            _this._hide();
-          }
-        });
+    /**
+     * Adjusts the dropdown pane possible positions by iterating through alignments
+     * on the current position.
+     * @function
+     * @private
+     */
+
+  }, {
+    key: '_realign',
+    value: function _realign() {
+      this._addTriedPosition(this.position, this.alignment);
+      this.alignment = nextItem(this.alignment, ALIGNMENTS[this.position]);
+    }
+  }, {
+    key: '_addTriedPosition',
+    value: function _addTriedPosition(position, alignment) {
+      this.triedPositions[position] = this.triedPositions[position] || [];
+      this.triedPositions[position].push(alignment);
+    }
+  }, {
+    key: '_positionsExhausted',
+    value: function _positionsExhausted() {
+      var isExhausted = true;
+      for (var i = 0; i < POSITIONS.length; i++) {
+        isExhausted = isExhausted && this._alignmentsExhausted(POSITIONS[i]);
       }
+      return isExhausted;
+    }
+  }, {
+    key: '_alignmentsExhausted',
+    value: function _alignmentsExhausted(position) {
+      return this.triedPositions[position] && this.triedPositions[position].length == ALIGNMENTS[position].length;
+    }
 
-      if (!this.options.disableHover) {
-        this.$menuItems.on('mouseenter.zf.dropdownmenu', function (e) {
-          var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-              hasSub = $elem.hasClass(parClass);
+    // When we're trying to center, we don't want to apply offset that's going to
+    // take us just off center, so wrap around to return 0 for the appropriate
+    // offset in those alignments.  TODO: Figure out if we want to make this
+    // configurable behavior... it feels more intuitive, especially for tooltips, but
+    // it's possible someone might actually want to start from center and then nudge
+    // slightly off.
 
-          if (hasSub) {
-            clearTimeout($elem.data('_delay'));
-            $elem.data('_delay', setTimeout(function () {
-              _this._show($elem.children('.is-dropdown-submenu'));
-            }, _this.options.hoverDelay));
-          }
-        }).on('mouseleave.zf.dropdownmenu', function (e) {
-          var $elem = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this),
-              hasSub = $elem.hasClass(parClass);
-          if (hasSub && _this.options.autoclose) {
-            if ($elem.attr('data-is-click') === 'true' && _this.options.clickOpen) {
-              return false;
-            }
-
-            clearTimeout($elem.data('_delay'));
-            $elem.data('_delay', setTimeout(function () {
-              _this._hide($elem);
-            }, _this.options.closingTime));
-          }
-        });
+  }, {
+    key: '_getVOffset',
+    value: function _getVOffset() {
+      return this.options.vOffset;
+    }
+  }, {
+    key: '_getHOffset',
+    value: function _getHOffset() {
+      return this.options.hOffset;
+    }
+  }, {
+    key: '_setPosition',
+    value: function _setPosition($anchor, $element, $parent) {
+      if ($anchor.attr('aria-expanded') === 'false') {
+        return false;
       }
-      this.$menuItems.on('keydown.zf.dropdownmenu', function (e) {
-        var $element = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(e.target).parentsUntil('ul', '[role="menuitem"]'),
-            isTab = _this.$tabs.index($element) > -1,
-            $elements = isTab ? _this.$tabs : $element.siblings('li').add($element),
-            $prevElement,
-            $nextElement;
+      var $eleDims = __WEBPACK_IMPORTED_MODULE_0__foundation_util_box__["a" /* Box */].GetDimensions($element),
+          $anchorDims = __WEBPACK_IMPORTED_MODULE_0__foundation_util_box__["a" /* Box */].GetDimensions($anchor);
 
-        $elements.each(function (i) {
-          if (__WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).is($element)) {
-            $prevElement = $elements.eq(i - 1);
-            $nextElement = $elements.eq(i + 1);
+      $element.offset(__WEBPACK_IMPORTED_MODULE_0__foundation_util_box__["a" /* Box */].GetExplicitOffsets($element, $anchor, this.position, this.alignment, this._getVOffset(), this._getHOffset()));
+
+      if (!this.options.allowOverlap) {
+        var overlaps = {};
+        var minOverlap = 100000000;
+        // default coordinates to how we start, in case we can't figure out better
+        var minCoordinates = { position: this.position, alignment: this.alignment };
+        while (!this._positionsExhausted()) {
+          var overlap = __WEBPACK_IMPORTED_MODULE_0__foundation_util_box__["a" /* Box */].OverlapArea($element, $parent, false, false, this.options.allowBottomOverlap);
+          if (overlap === 0) {
             return;
           }
-        });
 
-        var nextSibling = function () {
-          $nextElement.children('a:first').focus();
-          e.preventDefault();
-        },
-            prevSibling = function () {
-          $prevElement.children('a:first').focus();
-          e.preventDefault();
-        },
-            openSub = function () {
-          var $sub = $element.children('ul.is-dropdown-submenu');
-          if ($sub.length) {
-            _this._show($sub);
-            $element.find('li > a:first').focus();
-            e.preventDefault();
-          } else {
-            return;
+          if (overlap < minOverlap) {
+            minOverlap = overlap;
+            minCoordinates = { position: this.position, alignment: this.alignment };
           }
-        },
-            closeSub = function () {
-          //if ($element.is(':first-child')) {
-          var close = $element.parent('ul').parent('li');
-          close.children('a:first').focus();
-          _this._hide(close);
-          e.preventDefault();
-          //}
-        };
-        var functions = {
-          open: openSub,
-          close: function () {
-            _this._hide(_this.$element);
-            _this.$menuItems.eq(0).children('a').focus(); // focus to first element
-            e.preventDefault();
-          },
-          handled: function () {
-            e.stopImmediatePropagation();
-          }
-        };
 
-        if (isTab) {
-          if (_this._isVertical()) {
-            // vertical menu
-            if (_this._isRtl()) {
-              // right aligned
-              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
-                down: nextSibling,
-                up: prevSibling,
-                next: closeSub,
-                previous: openSub
-              });
-            } else {
-              // left aligned
-              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
-                down: nextSibling,
-                up: prevSibling,
-                next: openSub,
-                previous: closeSub
-              });
-            }
-          } else {
-            // horizontal menu
-            if (_this._isRtl()) {
-              // right aligned
-              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
-                next: prevSibling,
-                previous: nextSibling,
-                down: openSub,
-                up: closeSub
-              });
-            } else {
-              // left aligned
-              __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
-                next: nextSibling,
-                previous: prevSibling,
-                down: openSub,
-                up: closeSub
-              });
-            }
-          }
-        } else {
-          // not tabs -> one sub
-          if (_this._isRtl()) {
-            // right aligned
-            __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
-              next: closeSub,
-              previous: openSub,
-              down: nextSibling,
-              up: prevSibling
-            });
-          } else {
-            // left aligned
-            __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.extend(functions, {
-              next: openSub,
-              previous: closeSub,
-              down: nextSibling,
-              up: prevSibling
-            });
-          }
+          this._reposition();
+
+          $element.offset(__WEBPACK_IMPORTED_MODULE_0__foundation_util_box__["a" /* Box */].GetExplicitOffsets($element, $anchor, this.position, this.alignment, this._getVOffset(), this._getHOffset()));
         }
-        __WEBPACK_IMPORTED_MODULE_1__foundation_util_keyboard__["a" /* Keyboard */].handleKey(e, 'DropdownMenu', functions);
-      });
-    }
-
-    /**
-     * Adds an event handler to the body to close any dropdowns on a click.
-     * @function
-     * @private
-     */
-
-  }, {
-    key: '_addBodyHandler',
-    value: function _addBodyHandler() {
-      var $body = __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document.body),
-          _this = this;
-      $body.off('mouseup.zf.dropdownmenu touchend.zf.dropdownmenu').on('mouseup.zf.dropdownmenu touchend.zf.dropdownmenu', function (e) {
-        var $link = _this.$element.find(e.target);
-        if ($link.length) {
-          return;
-        }
-
-        _this._hide();
-        $body.off('mouseup.zf.dropdownmenu touchend.zf.dropdownmenu');
-      });
-    }
-
-    /**
-     * Opens a dropdown pane, and checks for collisions first.
-     * @param {jQuery} $sub - ul element that is a submenu to show
-     * @function
-     * @private
-     * @fires DropdownMenu#show
-     */
-
-  }, {
-    key: '_show',
-    value: function _show($sub) {
-      var idx = this.$tabs.index(this.$tabs.filter(function (i, el) {
-        return __WEBPACK_IMPORTED_MODULE_0_jquery___default()(el).find($sub).length > 0;
-      }));
-      var $sibs = $sub.parent('li.is-dropdown-submenu-parent').siblings('li.is-dropdown-submenu-parent');
-      this._hide($sibs, idx);
-      $sub.css('visibility', 'hidden').addClass('js-dropdown-active').parent('li.is-dropdown-submenu-parent').addClass('is-active');
-      var clear = __WEBPACK_IMPORTED_MODULE_3__foundation_util_box__["a" /* Box */].ImNotTouchingYou($sub, null, true);
-      if (!clear) {
-        var oldClass = this.options.alignment === 'left' ? '-right' : '-left',
-            $parentLi = $sub.parent('.is-dropdown-submenu-parent');
-        $parentLi.removeClass('opens' + oldClass).addClass('opens-' + this.options.alignment);
-        clear = __WEBPACK_IMPORTED_MODULE_3__foundation_util_box__["a" /* Box */].ImNotTouchingYou($sub, null, true);
-        if (!clear) {
-          $parentLi.removeClass('opens-' + this.options.alignment).addClass('opens-inner');
-        }
-        this.changed = true;
+        // If we get through the entire loop, there was no non-overlapping
+        // position available. Pick the version with least overlap.
+        this.position = minCoordinates.position;
+        this.alignment = minCoordinates.alignment;
+        $element.offset(__WEBPACK_IMPORTED_MODULE_0__foundation_util_box__["a" /* Box */].GetExplicitOffsets($element, $anchor, this.position, this.alignment, this._getVOffset(), this._getHOffset()));
       }
-      $sub.css('visibility', '');
-      if (this.options.closeOnClick) {
-        this._addBodyHandler();
-      }
-      /**
-       * Fires when the new dropdown pane is visible.
-       * @event DropdownMenu#show
-       */
-      this.$element.trigger('show.zf.dropdownmenu', [$sub]);
-    }
-
-    /**
-     * Hides a single, currently open dropdown pane, if passed a parameter, otherwise, hides everything.
-     * @function
-     * @param {jQuery} $elem - element with a submenu to hide
-     * @param {Number} idx - index of the $tabs collection to hide
-     * @private
-     */
-
-  }, {
-    key: '_hide',
-    value: function _hide($elem, idx) {
-      var $toClose;
-      if ($elem && $elem.length) {
-        $toClose = $elem;
-      } else if (idx !== undefined) {
-        $toClose = this.$tabs.not(function (i, el) {
-          return i === idx;
-        });
-      } else {
-        $toClose = this.$element;
-      }
-      var somethingToClose = $toClose.hasClass('is-active') || $toClose.find('.is-active').length > 0;
-
-      if (somethingToClose) {
-        $toClose.find('li.is-active').add($toClose).attr({
-          'data-is-click': false
-        }).removeClass('is-active');
-
-        $toClose.find('ul.js-dropdown-active').removeClass('js-dropdown-active');
-
-        if (this.changed || $toClose.find('opens-inner').length) {
-          var oldClass = this.options.alignment === 'left' ? 'right' : 'left';
-          $toClose.find('li.is-dropdown-submenu-parent').add($toClose).removeClass('opens-inner opens-' + this.options.alignment).addClass('opens-' + oldClass);
-          this.changed = false;
-        }
-        /**
-         * Fires when the open menus are closed.
-         * @event DropdownMenu#hide
-         */
-        this.$element.trigger('hide.zf.dropdownmenu', [$toClose]);
-      }
-    }
-
-    /**
-     * Destroys the plugin.
-     * @function
-     */
-
-  }, {
-    key: '_destroy',
-    value: function _destroy() {
-      this.$menuItems.off('.zf.dropdownmenu').removeAttr('data-is-click').removeClass('is-right-arrow is-left-arrow is-down-arrow opens-right opens-left opens-inner');
-      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(document.body).off('.zf.dropdownmenu');
-      __WEBPACK_IMPORTED_MODULE_2__foundation_util_nest__["a" /* Nest */].Burn(this.$element, 'dropdown');
     }
   }]);
 
-  return DropdownMenu;
-}(__WEBPACK_IMPORTED_MODULE_5__foundation_plugin__["a" /* Plugin */]);
+  return Positionable;
+}(__WEBPACK_IMPORTED_MODULE_1__foundation_plugin__["a" /* Plugin */]);
 
-/**
- * Default settings for plugin
- */
-
-
-DropdownMenu.defaults = {
+Positionable.defaults = {
   /**
-   * Disallows hover events from opening submenus
+   * Position of positionable relative to anchor. Can be left, right, bottom, top, or auto.
    * @option
-   * @type {boolean}
-   * @default false
+   * @type {string}
+   * @default 'auto'
    */
-  disableHover: false,
+  position: 'auto',
   /**
-   * Allow a submenu to automatically close on a mouseleave event, if not clicked open.
-   * @option
-   * @type {boolean}
-   * @default true
-   */
-  autoclose: true,
-  /**
-   * Amount of time to delay opening a submenu on hover event.
-   * @option
-   * @type {number}
-   * @default 50
-   */
-  hoverDelay: 50,
-  /**
-   * Allow a submenu to open/remain open on parent click event. Allows cursor to move away from menu.
-   * @option
-   * @type {boolean}
-   * @default false
-   */
-  clickOpen: false,
-  /**
-   * Amount of time to delay closing a submenu on a mouseleave event.
-   * @option
-   * @type {number}
-   * @default 500
-   */
-
-  closingTime: 500,
-  /**
-   * Position of the menu relative to what direction the submenus should open. Handled by JS. Can be `'auto'`, `'left'` or `'right'`.
+   * Alignment of positionable relative to anchor. Can be left, right, bottom, top, center, or auto.
    * @option
    * @type {string}
    * @default 'auto'
    */
   alignment: 'auto',
   /**
-   * Allow clicks on the body to close any open submenus.
+   * Allow overlap of container/window. If false, dropdown positionable first
+   * try to position as defined by data-position and data-alignment, but
+   * reposition if it would cause an overflow.
+   * @option
+   * @type {boolean}
+   * @default false
+   */
+  allowOverlap: false,
+  /**
+   * Allow overlap of only the bottom of the container. This is the most common
+   * behavior for dropdowns, allowing the dropdown to extend the bottom of the
+   * screen but not otherwise influence or break out of the container.
    * @option
    * @type {boolean}
    * @default true
    */
-  closeOnClick: true,
+  allowBottomOverlap: true,
   /**
-   * Allow clicks on leaf anchor links to close any open submenus.
+   * Number of pixels the positionable should be separated vertically from anchor
    * @option
-   * @type {boolean}
-   * @default true
+   * @type {number}
+   * @default 0
    */
-  closeOnClickInside: true,
+  vOffset: 0,
   /**
-   * Class applied to vertical oriented menus, Foundation default is `vertical`. Update this if using your own class.
+   * Number of pixels the positionable should be separated horizontally from anchor
    * @option
-   * @type {string}
-   * @default 'vertical'
+   * @type {number}
+   * @default 0
    */
-  verticalClass: 'vertical',
-  /**
-   * Class applied to right-side oriented menus, Foundation default is `align-right`. Update this if using your own class.
-   * @option
-   * @type {string}
-   * @default 'align-right'
-   */
-  rightClass: 'align-right',
-  /**
-   * Boolean to force overide the clicking of links to perform default action, on second touch event for mobile.
-   * @option
-   * @type {boolean}
-   * @default true
-   */
-  forceFollow: true
+  hOffset: 0
 };
 
 
 
 /***/ }),
-/* 17 */
+/* 28 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Timer; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+
+
+
+
+function Timer(elem, options, cb) {
+  var _this = this,
+      duration = options.duration,
+      //options is an object for easily adding features later.
+  nameSpace = Object.keys(elem.data())[0] || 'timer',
+      remain = -1,
+      start,
+      timer;
+
+  this.isPaused = false;
+
+  this.restart = function () {
+    remain = -1;
+    clearTimeout(timer);
+    this.start();
+  };
+
+  this.start = function () {
+    this.isPaused = false;
+    // if(!elem.data('paused')){ return false; }//maybe implement this sanity check if used for other things.
+    clearTimeout(timer);
+    remain = remain <= 0 ? duration : remain;
+    elem.data('paused', false);
+    start = Date.now();
+    timer = setTimeout(function () {
+      if (options.infinite) {
+        _this.restart(); //rerun the timer.
+      }
+      if (cb && typeof cb === 'function') {
+        cb();
+      }
+    }, remain);
+    elem.trigger('timerstart.zf.' + nameSpace);
+  };
+
+  this.pause = function () {
+    this.isPaused = true;
+    //if(elem.data('paused')){ return false; }//maybe implement this sanity check if used for other things.
+    clearTimeout(timer);
+    elem.data('paused', true);
+    var end = Date.now();
+    remain = remain - (end - start);
+    elem.trigger('timerpaused.zf.' + nameSpace);
+  };
+}
+
+
+
+/***/ }),
+/* 29 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Touch; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+//**************************************************
+//**Work inspired by multiple jquery swipe plugins**
+//**Done by Yohai Ararat ***************************
+//**************************************************
+
+
+
+var Touch = {};
+
+var startPosX,
+    startPosY,
+    startTime,
+    elapsedTime,
+    isMoving = false;
+
+function onTouchEnd() {
+  //  alert(this);
+  this.removeEventListener('touchmove', onTouchMove);
+  this.removeEventListener('touchend', onTouchEnd);
+  isMoving = false;
+}
+
+function onTouchMove(e) {
+  if (__WEBPACK_IMPORTED_MODULE_0_jquery___default.a.spotSwipe.preventDefault) {
+    e.preventDefault();
+  }
+  if (isMoving) {
+    var x = e.touches[0].pageX;
+    var y = e.touches[0].pageY;
+    var dx = startPosX - x;
+    var dy = startPosY - y;
+    var dir;
+    elapsedTime = new Date().getTime() - startTime;
+    if (Math.abs(dx) >= __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.spotSwipe.moveThreshold && elapsedTime <= __WEBPACK_IMPORTED_MODULE_0_jquery___default.a.spotSwipe.timeThreshold) {
+      dir = dx > 0 ? 'left' : 'right';
+    }
+    // else if(Math.abs(dy) >= $.spotSwipe.moveThreshold && elapsedTime <= $.spotSwipe.timeThreshold) {
+    //   dir = dy > 0 ? 'down' : 'up';
+    // }
+    if (dir) {
+      e.preventDefault();
+      onTouchEnd.call(this);
+      __WEBPACK_IMPORTED_MODULE_0_jquery___default()(this).trigger('swipe', dir).trigger('swipe' + dir);
+    }
+  }
+}
+
+function onTouchStart(e) {
+  if (e.touches.length == 1) {
+    startPosX = e.touches[0].pageX;
+    startPosY = e.touches[0].pageY;
+    isMoving = true;
+    startTime = new Date().getTime();
+    this.addEventListener('touchmove', onTouchMove, false);
+    this.addEventListener('touchend', onTouchEnd, false);
+  }
+}
+
+function init() {
+  this.addEventListener && this.addEventListener('touchstart', onTouchStart, false);
+}
+
+function teardown() {
+  this.removeEventListener('touchstart', onTouchStart);
+}
+
+var SpotSwipe = function () {
+  function SpotSwipe($) {
+    _classCallCheck(this, SpotSwipe);
+
+    this.version = '1.0.0';
+    this.enabled = 'ontouchstart' in document.documentElement;
+    this.preventDefault = false;
+    this.moveThreshold = 75;
+    this.timeThreshold = 200;
+    this.$ = $;
+    this._init();
+  }
+
+  _createClass(SpotSwipe, [{
+    key: '_init',
+    value: function _init() {
+      var $ = this.$;
+      $.event.special.swipe = { setup: init };
+
+      $.each(['left', 'up', 'down', 'right'], function () {
+        $.event.special['swipe' + this] = { setup: function () {
+            $(this).on('swipe', $.noop);
+          } };
+      });
+    }
+  }]);
+
+  return SpotSwipe;
+}();
+
+/****************************************************
+ * As far as I can tell, both setupSpotSwipe and    *
+ * setupTouchHandler should be idempotent,          *
+ * because they directly replace functions &        *
+ * values, and do not add event handlers directly.  *
+ ****************************************************/
+
+Touch.setupSpotSwipe = function ($) {
+  $.spotSwipe = new SpotSwipe($);
+};
+
+/****************************************************
+ * Method for adding pseudo drag events to elements *
+ ***************************************************/
+Touch.setupTouchHandler = function ($) {
+  $.fn.addTouch = function () {
+    this.each(function (i, el) {
+      $(el).bind('touchstart touchmove touchend touchcancel', function () {
+        //we pass the original event object because the jQuery event
+        //object is normalized to w3c specs and does not provide the TouchList
+        handleTouch(event);
+      });
+    });
+
+    var handleTouch = function (event) {
+      var touches = event.changedTouches,
+          first = touches[0],
+          eventTypes = {
+        touchstart: 'mousedown',
+        touchmove: 'mousemove',
+        touchend: 'mouseup'
+      },
+          type = eventTypes[event.type],
+          simulatedEvent;
+
+      if ('MouseEvent' in window && typeof window.MouseEvent === 'function') {
+        simulatedEvent = new window.MouseEvent(type, {
+          'bubbles': true,
+          'cancelable': true,
+          'screenX': first.screenX,
+          'screenY': first.screenY,
+          'clientX': first.clientX,
+          'clientY': first.clientY
+        });
+      } else {
+        simulatedEvent = document.createEvent('MouseEvent');
+        simulatedEvent.initMouseEvent(type, true, true, window, 1, first.screenX, first.screenY, first.clientX, first.clientY, false, false, false, false, 0 /*left*/, null);
+      }
+      first.target.dispatchEvent(simulatedEvent);
+    };
+  };
+};
+
+Touch.init = function ($) {
+  if (typeof $.spotSwipe === 'undefined') {
+    Touch.setupSpotSwipe($);
+    Touch.setupTouchHandler($);
+  }
+};
+
+
+
+/***/ }),
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_util_mediaQuery__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_util_triggers__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_responsiveMenu__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_reveal__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_sticky__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_interchange__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_drilldown__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_accordionMenu__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_dropdownMenu__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_magellan__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_responsiveMenu__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_dropdown__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_offcanvas__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_reveal__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_orbit__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_sticky__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_interchange__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_responsiveToggle__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_toggler__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_abide__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_equalizer__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_smoothScroll__ = __webpack_require__(12);
 
 
 __WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].addToJquery(__WEBPACK_IMPORTED_MODULE_0_jquery___default.a);
@@ -4939,13 +9145,37 @@ __WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node
 
 __WEBPACK_IMPORTED_MODULE_3__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_util_triggers__["a" /* Triggers */].init(__WEBPACK_IMPORTED_MODULE_0_jquery___default.a, __WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */]);
 
-__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_4__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_responsiveMenu__["a" /* ResponsiveMenu */], 'ResponsiveMenu');
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_4__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_drilldown__["a" /* Drilldown */], 'Drilldown');
 
-__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_5__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_reveal__["a" /* Reveal */], 'Reveal');
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_5__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_accordionMenu__["a" /* AccordionMenu */], 'AccordionMenu');
 
-__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_6__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_sticky__["a" /* Sticky */], 'Sticky');
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_6__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_dropdownMenu__["a" /* DropdownMenu */], 'DropdownMenu');
 
-__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_7__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_interchange__["a" /* Interchange */], 'Interchange');
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_7__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_magellan__["a" /* Magellan */], 'Magellan');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_8__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_responsiveMenu__["a" /* ResponsiveMenu */], 'ResponsiveMenu');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_9__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_dropdown__["a" /* Dropdown */], 'Dropdown');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_10__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_offcanvas__["a" /* OffCanvas */], 'OffCanvas');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_11__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_reveal__["a" /* Reveal */], 'Reveal');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_12__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_orbit__["a" /* Orbit */], 'Orbit');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_13__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_sticky__["a" /* Sticky */], 'Sticky');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_14__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_interchange__["a" /* Interchange */], 'Interchange');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_15__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_responsiveToggle__["a" /* ResponsiveToggle */], 'ResponsiveToggle');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_16__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_toggler__["a" /* Toggler */], 'Toggler');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_17__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_abide__["a" /* Abide */], 'Abide');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_18__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_equalizer__["a" /* Equalizer */], 'Equalizer');
+
+__WEBPACK_IMPORTED_MODULE_1__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_core__["a" /* Foundation */].plugin(__WEBPACK_IMPORTED_MODULE_19__home_deployer_sites_node_foundation_customizer_node_foundation_customizer_foundation_sites_js_foundation_smoothScroll__["a" /* SmoothScroll */], 'SmoothScroll');
 
 /***/ })
 /******/ ]);

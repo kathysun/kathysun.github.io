@@ -1,0 +1,96 @@
+// use border-box for everything
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+// set font styles
+body {
+  font-family: $sans-serif;
+  color: $color-text;
+}
+
+h1 {
+  font-family: $sans-serif;
+  color: $color-primary;
+  font-size: 1.25rem;
+  margin: 0 auto 1em;
+  font-weight: 400;
+}
+
+h2 {
+  font-family: $mono;
+  color: $color-text-lighter;
+  font-size: 0.9375rem;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin: 1rem 0 0.125rem;
+}
+
+.subtitle {
+  font-family: $mono;
+  color: $color-text-lighter;
+  font-size: 1rem;
+  padding-bottom: 15px;
+}
+
+// additional font styles
+
+.f1 {
+  font-size: 1.25rem;
+}
+
+.b {
+  font-weight: 700;
+}
+
+.b-mono {
+  font-weight: 500;
+}
+
+// set link styles
+a {
+  text-decoration: none;
+  border-bottom: 1px solid $color-text-darker;
+  color: darken($color-text-darker, 25%);
+  &:hover {
+    color: $color-accent;
+    border-bottom-color: $color-accent;
+  }
+}
+
+.link {
+  display: inline;
+  position: relative;
+  overflow: hidden;
+  border-bottom: none;
+  &:after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 100%;
+    bottom: -2px;
+    background: $color-accent;
+    height: 4px;
+    transition-property: left right;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+  }
+  &:hover:after,
+  &:focus:after,
+  &:active:after {
+    right: 0;
+  }
+}
+
+.center-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

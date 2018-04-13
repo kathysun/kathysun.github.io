@@ -1,0 +1,31 @@
+// media queries
+@mixin mq($break) {
+  @if map-has-key($breakpoints, $break) {
+        $value: map-get($breakpoints, $break);
+        @media screen and (min-width: $value) {
+            @content;
+        }
+    }
+}
+
+// flex
+@mixin flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: space-between;
+  @content;
+}
+
+// padding
+@mixin gap-right {
+  padding-right: 15px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
+@mixin gap-left {
+  padding-left: 15px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}

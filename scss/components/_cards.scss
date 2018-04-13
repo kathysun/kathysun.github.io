@@ -1,0 +1,28 @@
+.card {
+  padding: 2rem 1.5rem 2rem 0;
+  &-image {
+    overflow: hidden;
+  }
+  img {
+    width: 100%;
+    transition: all 0.2s ease;
+    vertical-align: middle;
+    &:hover {
+      filter: opacity(50%);
+    }
+  }
+  &-caption {
+    color: $color-text-darker;
+    font-family: $sans-serif;
+    font-weight: 700;
+    font-size: 0.9375em;
+    padding-top: 15px;
+    line-height: 90%;
+  }
+  &-tags {
+    color: $color-text-lighter;
+    font-family: $mono;
+    font-weight: 400;
+    font-size: 0.75rem;
+  }
+}

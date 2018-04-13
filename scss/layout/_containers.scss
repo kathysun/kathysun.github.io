@@ -1,0 +1,51 @@
+// grid for page
+.container {
+  display: grid;
+  width: 100%;
+  @include mq(med) {
+    height: 95vh;
+    padding-top: 50px;
+    grid-template-columns: 240px 1fr;
+    grid-gap: 25px;
+  }
+}
+
+.column {
+  width: 100%;
+  margin-bottom: 75px;
+  @include mq(med) {
+    margin-bottom: 0;
+  }
+}
+
+// left column
+.left {
+  @include mq(med) {
+    padding-left: 10%;
+    padding-right: 2.5%;
+  }
+  @include mq(lg) {
+    padding-left: 20%;
+  }
+}
+
+// main column
+
+.main {
+  @include mq(med) {
+    padding-top: 0;
+    padding-left: 2.5%;
+    padding-right: 5%;
+    overflow-y: auto;
+  }
+  @include mq(lg) {
+    @include flex;
+  }
+  @include mq(xl) {
+    padding-left: 7.5%;
+    padding-right: 7.5%;
+  }
+  img {
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,22 @@
+// colors
+$color-primary: #3a35ff; // blue
+$color-secondary: #5500a8; // dark purple
+$color-accent: #a345ff; // fuchsia
+
+$color-text: #676d6c;
+$color-text-darker: #272f2e;
+$color-text-lighter: #989b9b;
+
+$white: #fff;
+
+// fonts
+$sans-serif: 'IBM Plex Sans', 'Helvetica', sans-serif;
+$mono: 'Roboto Mono', mono;
+
+// breakpoints
+$breakpoints: (
+  sm: 400px,
+  med: 600px,
+  lg: 960px,
+  xl: 1200px,
+);

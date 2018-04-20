@@ -19,13 +19,13 @@
 
 // padding
 @mixin gap-right {
-  padding-right: 15px;
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-right: 1rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 @mixin gap-left {
-  padding-left: 15px;
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-left: 1rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }

@@ -16,7 +16,9 @@
 }
 
 .gap-left {
-  @include gap-left;
+  @include mq(lg) {
+    @include gap-left;
+  }
 }
 
 .gap-right {

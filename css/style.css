@@ -275,16 +275,18 @@ a:hover {
   flex-basis: 25%;
 }
 
-.gap-left {
-  padding-left: 15px;
-  padding-top: 30px;
-  padding-bottom: 30px;
+@media screen and (min-width: 960px) {
+  .gap-left {
+    padding-left: 1rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
 }
 
 .gap-right {
-  padding-right: 15px;
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-right: 1rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 @media screen and (min-width: 960px) {
@@ -294,7 +296,12 @@ a:hover {
 }
 
 .card {
-  padding: 2rem 1.5rem 2rem 0;
+  padding: 2rem 0;
+}
+@media screen and (min-width: 600px) {
+  .card {
+    padding-right: 1.5rem;
+  }
 }
 .card-image {
   overflow: hidden;

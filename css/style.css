@@ -45,6 +45,11 @@ h2 {
   font-size: 0.75rem;
 }
 
+.caption {
+  font-size: 0.75rem;
+  color: #989b9b;
+}
+
 .b {
   font-weight: 700;
 }

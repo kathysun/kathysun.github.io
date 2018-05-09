@@ -55,7 +55,7 @@
   }
 }
 
-.profile > img:first-of-type {
+.profile img {
   width: 40px;
   padding-top: 75px;
   padding-bottom: 20px;
@@ -71,7 +71,7 @@
 
 .profile p {
   font-family: $mono;
-  color: $color-text-lighter;
+  color: $color-text-lighter-2;
   text-align: center;
   font-size: 1.25rem;
   line-height: 125%;

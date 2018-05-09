@@ -13,28 +13,26 @@ html {
 body {
   font-family: $sans-serif;
   color: $color-text;
+  font-size: 1.125rem;
 }
 
+// h1 - use for page titles
 h1 {
   font-family: $sans-serif;
   color: $color-primary;
   font-size: 1.25rem;
-  margin: 0 auto 1em;
-  font-weight: 400;
+  margin: 0 auto 1rem;
+  font-weight: 700;
 }
 
 h2 {
-  font-family: $mono;
-  color: $color-text-lighter;
-  font-size: 0.9375rem;
-  text-transform: uppercase;
-  font-weight: 500;
-  margin: 1rem 0 0.125rem;
+  margin-top: 2rem;
+  color: $color-text-darker;
 }
 
 .subtitle {
   font-family: $mono;
-  color: $color-text-lighter;
+  color: $color-text-lighter-1;
   font-size: 1rem;
   padding-bottom: 15px;
 }
@@ -43,15 +41,36 @@ h2 {
 
 .f1 {
   font-size: 1.25rem;
+  margin-top: 0;
+}
+
+.f2 {
+  font-family: $mono;
+  color: $color-text-lighter-1;
+  font-size: 0.9375rem;
+  margin: 0 0 0.5rem;
 }
 
 .f3 {
   font-size: 0.75rem;
 }
 
+.f4 {
+  font-size: 1rem;
+  color: $color-text-darker;
+  font-family: $sans-serif;
+  margin: 0 0 1rem;
+}
+
+.f5 {
+  font-size: 1rem;
+  color: $color-text-lighter-1;
+  font-family: $sans-serif;
+}
+
 .caption {
-  font-size: 0.75rem;
-  color: $color-text-lighter;
+  font-size: 0.875rem;
+  color: $color-text-lighter-2;
 }
 
 .b {
@@ -59,7 +78,7 @@ h2 {
 }
 
 .b-mono {
-  font-weight: 500;
+  font-weight: 700;
 }
 
 // set link styles

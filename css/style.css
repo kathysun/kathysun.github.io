@@ -9,45 +9,63 @@ html {
 }
 
 body {
-  font-family: "IBM Plex Sans", "Helvetica", sans-serif;
-  color: #676d6c;
+  font-family: "Karla", "Helvetica", sans-serif;
+  color: #4a4f4e;
+  font-size: 1.125rem;
 }
 
 h1 {
-  font-family: "IBM Plex Sans", "Helvetica", sans-serif;
+  font-family: "Karla", "Helvetica", sans-serif;
   color: #3a35ff;
   font-size: 1.25rem;
-  margin: 0 auto 1em;
-  font-weight: 400;
+  margin: 0 auto 1rem;
+  font-weight: 700;
 }
 
 h2 {
-  font-family: "Roboto Mono", mono;
-  color: #989b9b;
-  font-size: 0.9375rem;
-  text-transform: uppercase;
-  font-weight: 500;
-  margin: 1rem 0 0.125rem;
+  margin-top: 2rem;
+  color: #272f2e;
 }
 
 .subtitle {
   font-family: "Roboto Mono", mono;
-  color: #989b9b;
+  color: #7b8482;
   font-size: 1rem;
   padding-bottom: 15px;
 }
 
 .f1 {
   font-size: 1.25rem;
+  margin-top: 0;
+}
+
+.f2 {
+  font-family: "Roboto Mono", mono;
+  color: #7b8482;
+  font-size: 0.9375rem;
+  margin: 0 0 0.5rem;
 }
 
 .f3 {
   font-size: 0.75rem;
 }
 
+.f4 {
+  font-size: 1rem;
+  color: #272f2e;
+  font-family: "Karla", "Helvetica", sans-serif;
+  margin: 0 0 1rem;
+}
+
+.f5 {
+  font-size: 1rem;
+  color: #7b8482;
+  font-family: "Karla", "Helvetica", sans-serif;
+}
+
 .caption {
-  font-size: 0.75rem;
-  color: #989b9b;
+  font-size: 0.875rem;
+  color: #89908f;
 }
 
 .b {
@@ -55,7 +73,7 @@ h2 {
 }
 
 .b-mono {
-  font-weight: 500;
+  font-weight: 700;
 }
 
 a {
@@ -183,7 +201,7 @@ a:hover {
   }
 }
 .menu li a {
-  color: #676d6c;
+  color: #4a4f4e;
 }
 .menu .is-active > a {
   color: #272f2e;
@@ -223,7 +241,7 @@ a:hover {
   fill: #a345ff;
 }
 
-.profile > img:first-of-type {
+.profile img {
   width: 40px;
   padding-top: 75px;
   padding-bottom: 20px;
@@ -231,7 +249,7 @@ a:hover {
   display: block;
 }
 @media screen and (min-width: 600px) {
-  .profile > img:first-of-type {
+  .profile img {
     width: 60px;
     margin: 0 0;
     padding-top: 0;
@@ -241,7 +259,7 @@ a:hover {
 
 .profile p {
   font-family: "Roboto Mono", mono;
-  color: #989b9b;
+  color: #89908f;
   text-align: center;
   font-size: 1.25rem;
   line-height: 125%;
@@ -256,7 +274,7 @@ a:hover {
 }
 
 .profile p:first-of-type {
-  font-family: "IBM Plex Sans", "Helvetica", sans-serif;
+  font-family: "Karla", "Helvetica", sans-serif;
   color: #272f2e;
   font-weight: 600;
   font-size: 2rem;
@@ -325,14 +343,14 @@ a:hover {
 }
 .card-caption {
   color: #272f2e;
-  font-family: "IBM Plex Sans", "Helvetica", sans-serif;
+  font-family: "Karla", "Helvetica", sans-serif;
   font-weight: 700;
-  font-size: 0.9375em;
+  font-size: 0.9375rem;
   padding-top: 15px;
   line-height: 90%;
 }
 .card-tags {
-  color: #989b9b;
+  color: #89908f;
   font-family: "Roboto Mono", mono;
   font-weight: 400;
   font-size: 0.75rem;

@@ -3,14 +3,15 @@ $color-primary: #3a35ff; // blue
 $color-secondary: #5500a8; // dark purple
 $color-accent: #a345ff; // fuchsia
 
-$color-text: #676d6c;
+$color-text: #4a4f4e;
 $color-text-darker: #272f2e;
-$color-text-lighter: #989b9b;
+$color-text-lighter-1: lighten($color-text, 20);
+$color-text-lighter-2: lighten($color-text, 25);
 
 $white: #fff;
 
 // fonts
-$sans-serif: 'IBM Plex Sans', 'Helvetica', sans-serif;
+$sans-serif: 'Karla', 'Helvetica', sans-serif;
 $mono: 'Roboto Mono', mono;
 
 // breakpoints

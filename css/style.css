@@ -298,6 +298,22 @@ a:hover {
   flex-basis: 75%;
 }
 
+.w-60 {
+  flex-basis: 60%;
+}
+
+.w-55 {
+  flex-basis: 55%;
+}
+
+.w-45 {
+  flex-basis: 45%;
+}
+
+.w-40 {
+  flex-basis: 40%;
+}
+
 .w-25 {
   flex-basis: 25%;
 }
@@ -319,6 +335,16 @@ a:hover {
 @media screen and (min-width: 960px) {
   .textbox {
     max-width: 80%;
+  }
+}
+
+.screen img {
+  padding: 0.5rem;
+  max-width: 48%;
+}
+@media screen and (min-width: 960px) {
+  .screen img {
+    max-width: 24%;
   }
 }
 

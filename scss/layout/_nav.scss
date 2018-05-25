@@ -3,14 +3,14 @@
   text-align: center;
   list-style-type: none;
   padding: 0;
-  @include mq(med) {
+  @include mq(lg) {
     text-align: left;
   }
   li {
     display: inline-block;
     margin: 0 5px;
     font-size: 1.25rem;
-    @include mq(med) {
+    @include mq(lg) {
       margin: 3rem 0 0;
       font-size: 1rem;
       display: block;
@@ -25,7 +25,7 @@
     color: $color-text-darker;
     font-weight: 600;
     border-bottom: 4px solid $color-accent;
-    @include mq(med) {
+    @include mq(lg) {
       border-bottom: none;
     }
   }
@@ -35,24 +35,28 @@
 .contact {
   margin: 50px 0 100px;
   text-align: center;
-  @include mq(med) {
+  @include mq(lg) {
     text-align: left;
     margin: 30px 0 60px;
   }
   a {
     border-bottom: none;
-    svg {
+    i {
       fill: $color-text-darker;
       margin: 0 5px;
-      @include mq(med) {
+      @include mq(lg) {
         margin-left: 0;
         margin-right: 10px;
       }
-      &:hover {
-        fill: $color-accent;
-      }
+      // &:hover {
+      //   opacity: 1;
+      // }
     }
   }
+}
+
+.fade {
+  opacity: 0.7;
 }
 
 .profile img {
@@ -61,7 +65,7 @@
   padding-bottom: 20px;
   margin: auto;
   display: block;
-  @include mq(med) {
+  @include mq(lg) {
     width: 3rem;
     margin: 0 0;
     padding-top: 0;
@@ -76,7 +80,7 @@
   font-size: 1.25rem;
   line-height: 125%;
   margin: 0.375em 1.25em;
-  @include mq(med) {
+  @include mq(lg) {
     margin: 0.125em 0;
     text-align: left;
     font-size: 1.125rem;
@@ -88,7 +92,7 @@
   color: $color-text-darker;
   font-weight: 600;
   font-size: 2rem;
-  @include mq(med) {
+  @include mq(lg) {
     font-size: 1.5rem;
     margin-bottom: 2em;
   }

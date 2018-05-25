@@ -2,7 +2,7 @@
 .container {
   display: grid;
   width: 100%;
-  @include mq(med) {
+  @include mq(lg) {
     height: 95vh;
     padding-top: 50px;
     grid-template-columns: 240px 1fr;
@@ -12,15 +12,17 @@
 
 .column {
   width: 100%;
-  margin-bottom: 75px;
-  @include mq(med) {
-    margin-bottom: 0;
-  }
+  padding: 0 3%;
 }
 
 // left column
 .left {
+  margin-bottom: 4.5rem;
   @include mq(med) {
+    margin-bottom: 2rem;
+  }
+  @include mq(lg) {
+    margin-bottom: 0;
     padding-left: 10%;
     padding-right: 2.5%;
   }
@@ -32,7 +34,7 @@
 // main column
 
 .main {
-  @include mq(med) {
+  @include mq(lg) {
     padding-top: 0;
     padding-left: 2.5%;
     padding-right: 5%;

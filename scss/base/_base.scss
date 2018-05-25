@@ -89,8 +89,8 @@ a {
   border-bottom: 1px solid $color-text-darker;
   color: darken($color-text-darker, 25%);
   &:hover {
-    color: $color-accent;
-    border-bottom-color: $color-accent;
+    color: $color-primary;
+    border-bottom-color: $color-primary;
   }
 }
 
@@ -118,6 +118,14 @@ a {
     right: 0;
   }
 }
+
+// bullets
+
+li {
+  margin-bottom: 0.375rem;
+}
+
+// images
 
 .center-image {
   display: block;
